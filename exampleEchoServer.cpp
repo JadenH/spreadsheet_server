@@ -1,89 +1,120 @@
-/* Example Echo Server taken from github
- * Written by Mathias Buus (mafintosh)
- * No Plagiarism is intended by the use of this simple TCP echo server, 
- * it is simply a starting point & reference for a larger project
- */
+//
+// async_tcp_echo_server.cpp
+// ~~~~~~~~~~~~~~~~~~~~~~~~~
+//
+// Copyright (c) 2003-2015 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+//
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+//
 
-#include <stdio.h>
+#include <cstdlib>
 #include <iostream>
-#include <stdlib.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <unistd.h>
+#include <memory>
+#include <utility>
+#include <boost/asio.hpp>
 
-using namespace std;
+using boost::asio::ip::tcp;
 
-#define BUFFER_SIZE 1024
-#define on_error(...) { fprintf(stderr, __VA_ARGS__); fflush(stderr); exit(1); }
+class session
+  : public std::enable_shared_from_this<session>
+{
+public:
+  session(tcp::socket socket)
+    : socket_(std::move(socket))
+  {
+  }
 
-int main () {
+  void start()
+  {
+    do_read();
+  }
 
-  //Open for lab1 machines
-  int port_number = 2112;
+private:
+  void do_read()
+  {
+    auto self(shared_from_this());
+    socket_.async_read_some(boost::asio::buffer(data_, max_length),
+        [this, self](boost::system::error_code ec, std::size_t length)
+        {
+          if (!ec)
+          {
+            do_write(length);
+            std::cout << "Hello do_read!\n" << std::endl;
+                        std::cout << length << std::endl;
+                        std::cout << data_ << std::endl;
+          }
+        });
+  }
 
-  //File descriptors for server and client for multi-threading.
-  int server_fd, client_fd, err;
-  
-  struct sockaddr_in server, client;
-  
-  char buf[BUFFER_SIZE];
+  void do_write(std::size_t length)
+  {
+    auto self(shared_from_this());
+    boost::asio::async_write(socket_, boost::asio::buffer(data_, length),
+        [this, self](boost::system::error_code ec, std::size_t /*length*/)
+        {
+          if (!ec)
+          {
+            do_read();
+            std::cout << "Hello do_write!\n" << std::endl;
 
-  //Use socket type AF_INET (for IPv4)
-  //Use socket type SOCK_Stream (for TCP)
-  //Third argument is 0 in order to use IP.
-  server_fd = socket(AF_INET, SOCK_STREAM, 0);
-  
-  //Check for failure
-  if (server_fd < 0) 
-  	cout << "Could not create socket\n";
+          }
+        });
+  }
 
-  server.sin_family = AF_INET; // Server uses IPv4
-  server.sin_port = htons(port_number);  //Convert port number to byte order used by network
-  server.sin_addr.s_addr = htonl(INADDR_ANY); //Accept any IP address
+  tcp::socket socket_;
+  enum { max_length = 1024 };
+  char data_[max_length];
+};
 
-  int opt_val = 1;
-  //Set options. Could be useful. Check these out.
-  setsockopt(	server_fd,  	//applying choices to server
-  		SOL_SOCKET, 	//set socket level options
-  		SO_REUSEADDR, 	//Bind will reuse local addresses
-  		&opt_val, 	//Returns an int indicating the options chosen.
-  		sizeof opt_val);//In order to save the int correctly
+class server
+{
+public:
+  server(boost::asio::io_service& io_service, short port)
+    : acceptor_(io_service, tcp::endpoint(tcp::v4(), port)),
+      socket_(io_service)
+  {
+    do_accept();
+  }
 
-  //Binds the address in 'sockaddr' to the file descriptor for server
-  if ( bind(server_fd, (struct sockaddr *) &server, sizeof(server)) < 0)
-  	cout << "Could not bind socket\n";
+private:
+  void do_accept()
+  {
+    acceptor_.async_accept(socket_,
+        [this](boost::system::error_code ec)
+        {
+          if (!ec)
+          {
+            std::make_shared<session>(std::move(socket_))->start();
+          }
 
-  //Tells server to start listening
-  if ( listen(server_fd, 128) )
-  	cout << "Server failed to listen socket\n";
+          do_accept();
+        });
+  }
 
-  printf("Server is listening on %d\n", port_number);
+  tcp::acceptor acceptor_;
+  tcp::socket socket_;
+};
 
-  while (1) {
-  
-    //Size of client struct
-    socklen_t client_len = sizeof(client);
-    
-    //Assign file descriptor to accepted client.
-    client_fd = accept(server_fd, (struct sockaddr *) &client, &client_len);
-
-    if (client_fd < 0) 
-    	cout << "Could not establish new connection\n";
-
-    while (1) {
-    
-      //Recieves message, stores it in buffer.
-      int read = recv(client_fd, buf, BUFFER_SIZE, 0);
-
-      if (!read) break; // done reading
-      if (read < 0)
-      	cout << "Receive from client failed\n";
-
-	//Send the buffer contents back. 
-      if (send(client_fd, buf, read, 0) < 0) 
-      	cout << "Send to client failed\n";
+int main(int argc, char* argv[])
+{
+  try
+  {
+    if (argc != 2)
+    {
+      std::cerr << "Usage: async_tcp_echo_server <port>\n";
+      return 1;
     }
+
+    boost::asio::io_service io_service;
+
+    server s(io_service, std::atoi(argv[1]));
+
+    io_service.run();
+  }
+  catch (std::exception& e)
+  {
+    std::cerr << "Exception: " << e.what() << "\n";
   }
 
   return 0;
