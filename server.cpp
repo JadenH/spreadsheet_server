@@ -24,6 +24,7 @@
 #include <memory>
 #include <utility>
 #include <boost/asio.hpp>
+#include <boost/regex.hpp>
 
 //Using the boost asio tcp ip namespaces?
 using boost::asio::ip::tcp;
@@ -61,6 +62,8 @@ class session
 		                   theData = data_;
 		                   
 		                   std::cout << theData << std::endl;
+		                   
+		                   
 		     }
 		   });
 	  }
