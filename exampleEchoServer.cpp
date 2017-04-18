@@ -40,8 +40,7 @@ private:
           if (!ec)
           {
             do_write(length);
-            std::cout << "Hello do_read!\n" << std::endl;
-                        std::cout << length << std::endl;
+            std::cout << "Do read has been called!\n" << std::endl;
                         std::cout << data_ << std::endl;
           }
         });
@@ -56,7 +55,7 @@ private:
           if (!ec)
           {
             do_read();
-            std::cout << "Hello do_write!\n" << std::endl;
+            std::cout << "Do write has been called!\n"  << std::endl;
 
           }
         });
