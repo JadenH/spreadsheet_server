@@ -24,8 +24,10 @@
 #include <memory>
 #include <utility>
 #include <boost/asio.hpp>
+#include <boost/regex.hpp>
 #include "RegexUtils.h"
 #include "Sheet.h"
+#include "SpreadsheetManager.h"
 
 //Using the boost asio tcp ip namespaces?
 using boost::asio::ip::tcp;
@@ -37,10 +39,10 @@ class session
 	  : public std::enable_shared_from_this<session>
 	{
 	public:
-	  session(tcp::socket socket, std::map<std::string, Sheet>* spreadsheets)
+	  session(tcp::socket socket, SpreadsheetManager* spreadsheetManager)
 	    : socket_(std::move(socket))
 	  {
-			_spreadsheets = spreadsheets;
+			_spreadsheetManager = spreadsheetManager;
 	  }
 
 	  void start()
@@ -49,12 +51,13 @@ class session
 	  }
 
 	private:
-		std::map<std::string, Sheet>* _spreadsheets;
-		std::string current_spreadsheet;
+		SpreadsheetManager* _spreadsheetManager;
+		Sheet* _currentSpreadsheet;
 
 	  void do_read()
 	  {
 	    auto self(shared_from_this());
+
 	    socket_.async_read_some(boost::asio::buffer(data_, max_length),
 		   [this, self](boost::system::error_code ec, std::size_t length)
 		   {
@@ -63,12 +66,30 @@ class session
 		       do_write(length);
 		       std::cout << "Do read has been called!\n" << std::endl;
 
-           std::string theData;
+					 std::string theData;
            theData = data_;
+
+					 boost::smatch matches;
+		 			 if (RegexUtils::RegexFind(theData, "^[^:{]*", matches))
+		 			 {
+		 				 if (matches[0] == "Connect")
+		 				 {
+		 					 if (RegexUtils::RegexFind(theData, "([a-zA-Z0-9]*)}", matches))
+		 					 {
+		 						 std::cout << matches[1] << std::endl;
+		 					 }
+		 				 }
+		 				 else
+		 				 {
+		 					//  current_spreadsheet->
+		 				 }
+		 			 }
 
            std::cout << theData << std::endl;
 		     }
 		   });
+
+
 	  }
 
 	  void do_write(std::size_t length)
@@ -99,12 +120,13 @@ class server
 		 socket_(io_service)
 	  {
 	    do_accept();
-			Spreadsheets = new std::map<std::string, Sheet>();
+			_spreadsheetManager = new SpreadsheetManager();
 	  }
 
-		std::map<std::string, Sheet>* Spreadsheets;
 
 	private:
+		SpreadsheetManager* _spreadsheetManager;
+
 	  void do_accept()
 	  {
 	    acceptor_.async_accept(socket_,
@@ -112,7 +134,7 @@ class server
 		   {
 		     if (!ec)
 		     {
-		       std::make_shared<session>(std::move(socket_), Spreadsheets)->start();
+		       std::make_shared<session>(std::move(socket_), _spreadsheetManager)->start();
 		     }
 
 		     do_accept();

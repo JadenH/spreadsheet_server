@@ -1,3 +1,5 @@
+#ifndef SHEET_H
+#define SHEET_H
 /* Sheet.h
  *
  * Represents one spreadsheet on the server.
@@ -16,10 +18,12 @@ using boost::asio::ip::tcp;
 class Sheet
 {
   public:
-    void subscribe_socket(tcp::socket socket);
-
+    Sheet(std::string name);
+    void ReceiveMessage(std::string message);
 
   private:
-    std::map<char*, char*> _cells; 
+    std::map<char*, char*> _cells;
     std::queue<CellChange> _history;
 };
+
+#endif

@@ -1,3 +1,5 @@
+#ifndef SPREADSHEET_H
+#define SPREADSHEET_H
 /* Spreadsheet.h
  *
  * A single spreadsheet on the server.
@@ -8,9 +10,11 @@
 
 public:
   Spreadsheet();
-  
+
 private:
   // Dictionary of cells indexed by cell name, stored as strings
   std::map<char*, char*> _cells;
   // Queue of the changes that have happened since startup
   std::queue<SpreadsheetChange> _changes;
+
+#endif

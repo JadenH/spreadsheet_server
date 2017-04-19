@@ -1,3 +1,5 @@
+#ifndef REGEXUTILS_H
+#define REGEXUTILS_H
 /* RegexUtils.h
  *
  * Represents one spreadsheet on the server.
@@ -8,11 +10,10 @@
  #include <string>
  #include <boost/regex.hpp>
 
-namespace cs3505
+class RegexUtils
 {
-  class RegexUtils
-  {
-    public:
-      static void RegexFind(const std::string val, const std::string pattern, boost::smatch & out);
-  };
-}
+  public:
+    static bool RegexFind(const std::string val, const std::string pattern, boost::smatch & out);
+};
+
+#endif
