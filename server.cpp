@@ -9,10 +9,10 @@
  *
  *
  * Asychronous TCP server
- * This code was originally based on the 
- * async_tcp_echo_server written and copywrited by 2Christopher M. Kohlhoff (chris at kohlhoff dot com) 2003-2015 
+ * This code was originally based on the
+ * async_tcp_echo_server written and copywrited by 2Christopher M. Kohlhoff (chris at kohlhoff dot com) 2003-2015
  * made available publicly through GitHub.
- * No infringement or plagiarism is intended through the use of this code, it simply provided our team with a solid 
+ * No infringement or plagiarism is intended through the use of this code, it simply provided our team with a solid
  * starting point for our project.
  * Distributed under the Boost Software License, Version 1.0. (See accompanying
  *file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -30,7 +30,7 @@
 using boost::asio::ip::tcp;
 
 /*
- * Session class - This represents a connection session between a client and the server 
+ * Session class - This represents a connection session between a client and the server
  */
 class session
 	  : public std::enable_shared_from_this<session>
@@ -57,13 +57,11 @@ class session
 		     {
 		       do_write(length);
 		       std::cout << "Do read has been called!\n" << std::endl;
-		                   
-		                   std::string theData;
-		                   theData = data_;
-		                   
-		                   std::cout << theData << std::endl;
-		                   
-		                   
+           
+           std::string theData;
+           theData = data_;
+
+           std::cout << theData << std::endl;
 		     }
 		   });
 	  }
@@ -124,14 +122,14 @@ const int ourPort = 2112;
  */
 int main(int argc, char* argv[])
 {
- 
-    //Declaration of the io_service 
+
+    //Declaration of the io_service
     boost::asio::io_service io_service;
 
     //Create the server with the io_service variable and the port number
     server s(io_service, ourPort);
 
-    //Start up the listening service 
+    //Start up the listening service
     io_service.run();
 
   return 0;
