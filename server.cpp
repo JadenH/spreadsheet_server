@@ -24,7 +24,8 @@
 #include <memory>
 #include <utility>
 #include <boost/asio.hpp>
-#include <boost/regex.hpp>
+#include "RegexUtils.h"
+#include "Sheet.h"
 
 //Using the boost asio tcp ip namespaces?
 using boost::asio::ip::tcp;
@@ -36,9 +37,10 @@ class session
 	  : public std::enable_shared_from_this<session>
 	{
 	public:
-	  session(tcp::socket socket)
+	  session(tcp::socket socket, std::map<std::string, Sheet>* spreadsheets)
 	    : socket_(std::move(socket))
 	  {
+			_spreadsheets = spreadsheets;
 	  }
 
 	  void start()
@@ -47,6 +49,9 @@ class session
 	  }
 
 	private:
+		std::map<std::string, Sheet>* _spreadsheets;
+		std::string current_spreadsheet;
+
 	  void do_read()
 	  {
 	    auto self(shared_from_this());
@@ -57,7 +62,7 @@ class session
 		     {
 		       do_write(length);
 		       std::cout << "Do read has been called!\n" << std::endl;
-           
+
            std::string theData;
            theData = data_;
 
@@ -94,7 +99,10 @@ class server
 		 socket_(io_service)
 	  {
 	    do_accept();
+			Spreadsheets = new std::map<std::string, Sheet>();
 	  }
+
+		std::map<std::string, Sheet>* Spreadsheets;
 
 	private:
 	  void do_accept()
@@ -104,7 +112,7 @@ class server
 		   {
 		     if (!ec)
 		     {
-		       std::make_shared<session>(std::move(socket_))->start();
+		       std::make_shared<session>(std::move(socket_), Spreadsheets)->start();
 		     }
 
 		     do_accept();
