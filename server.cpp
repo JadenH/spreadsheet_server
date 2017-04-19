@@ -15,7 +15,7 @@
  * No infringement or plagiarism is intended through the use of this code, it simply provided our team with a solid
  * starting point for our project.
  * Distributed under the Boost Software License, Version 1.0. (See accompanying
- *file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+ * file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
  *
  */
 
@@ -24,133 +24,47 @@
 #include <memory>
 #include <utility>
 #include <boost/asio.hpp>
-#include <boost/regex.hpp>
-#include "RegexUtils.h"
-#include "Sheet.h"
+
 #include "SpreadsheetManager.h"
+#include "Session.h"
 
-//Using the boost asio tcp ip namespaces?
+// Using the boost asio tcp ip namespaces?
 using boost::asio::ip::tcp;
-
-/*
- * Session class - This represents a connection session between a client and the server
- */
-class session
-	  : public std::enable_shared_from_this<session>
-	{
-	public:
-	  session(tcp::socket socket, SpreadsheetManager* spreadsheetManager)
-	    : socket_(std::move(socket))
-	  {
-			_spreadsheetManager = spreadsheetManager;
-	  }
-
-	  void start()
-	  {
-	    do_read();
-	  }
-
-	private:
-		SpreadsheetManager* _spreadsheetManager;
-		Sheet* _currentSpreadsheet;
-
-	  void do_read()
-	  {
-	    auto self(shared_from_this());
-
-	    socket_.async_read_some(boost::asio::buffer(data_, max_length),
-		   [this, self](boost::system::error_code ec, std::size_t length)
-		   {
-		     if (!ec)
-		     {
-		       std::cout << "Do read has been called!\n" << std::endl;
-
-					 std::string theData;
-           theData = data_;
-
-					 boost::smatch matches;
-		 			 if (RegexUtils::RegexFind(theData, "^[^:{]*", matches))
-		 			 {
-		 				 if (matches[0] == "Connect")
-		 				 {
-		 					 if (RegexUtils::RegexFind(theData, "([a-zA-Z0-9]*)}", matches))
-		 					 {
-								 do_write(matches[1]);
-		 						 std::cout << matches[1] << std::endl;
-		 					 }
-		 				 }
-		 				 else
-		 				 {
-		 					//  current_spreadsheet->
-		 				 }
-		 			 }
-
-           std::cout << theData << std::endl;
-		     }
-				 else
-				 {
-					 	std::cout << ec << '\n';
-						// TODO: Remove from spreadsheets and disconnect socket.
-				 }
-		   });
-
-
-	  }
-
-	  void do_write(std::string message)
-	  {
-	    auto self(shared_from_this());
-	    boost::asio::async_write(socket_, boost::asio::buffer(message + "\n", (message + "\n").length()),
-		   [this, self](boost::system::error_code ec, std::size_t /*length*/)
-		   {
-		     if (!ec)
-		     {
-		       do_read();
-		       std::cout << "Do write has been called!\n"  << std::endl;
-
-		     }
-		   });
-	  }
-
-	  tcp::socket socket_;
-	  enum { max_length = 1000000000 };
-	  char data_[max_length];
-};
 
 class server
 {
-	public:
-	  server(boost::asio::io_service& io_service, short port)
-	    : acceptor_(io_service, tcp::endpoint(tcp::v4(), port)),
-		 socket_(io_service)
-	  {
-	    do_accept();
-			_spreadsheetManager = new SpreadsheetManager();
-	  }
+  public:
+    server(boost::asio::io_service& io_service, short port)
+      : acceptor_(io_service, tcp::endpoint(tcp::v4(), port)),
+      socket_(io_service)
+    {
+      do_accept();
+      _spreadsheetManager = new SpreadsheetManager();
+    }
 
 
-	private:
-		SpreadsheetManager* _spreadsheetManager;
+  private:
+    SpreadsheetManager* _spreadsheetManager;
 
-	  void do_accept()
-	  {
-	    acceptor_.async_accept(socket_,
-		   [this](boost::system::error_code ec)
-		   {
-		     if (!ec)
-		     {
-		       std::make_shared<session>(std::move(socket_), _spreadsheetManager)->start();
-		     }
+    void do_accept()
+    {
+      acceptor_.async_accept(socket_,
+                             [this](boost::system::error_code ec)
+    {
+      if (!ec)
+      {
+        std::make_shared<Session>(std::move(socket_), _spreadsheetManager)->Start();
+      }
 
-		     do_accept();
-		   });
-	  }
+      do_accept();
+    });
+    }
 
-	  tcp::acceptor acceptor_;
-	  tcp::socket socket_;
+    tcp::acceptor acceptor_;
+    tcp::socket socket_;
 };
 
-//Hard code the port into the server for this assignment
+// Hard code the port into the server for this assignment
 const int ourPort = 2112;
 /*
  * Main - Here is where the service is 'created' and started up
@@ -158,14 +72,14 @@ const int ourPort = 2112;
 int main(int argc, char* argv[])
 {
 
-    //Declaration of the io_service
-    boost::asio::io_service io_service;
+  // Declaration of the io_service
+  boost::asio::io_service io_service;
 
-    //Create the server with the io_service variable and the port number
-    server s(io_service, ourPort);
+  // Create the server with the io_service variable and the port number
+  server s(io_service, ourPort);
 
-    //Start up the listening service
-    io_service.run();
+  // Start up the listening service
+  io_service.run();
 
   return 0;
 }
