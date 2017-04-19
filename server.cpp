@@ -59,39 +59,58 @@ class session
 	    auto self(shared_from_this());
 
 	    socket_.async_read_some(boost::asio::buffer(data_, max_length),
-		   [this, self](boost::system::error_code ec, std::size_t length)
+		   [this, self](boost::system::error_code ec, std::size_t bytes_read)
 		   {
-		     if (!ec)
-		     {
-		       std::cout << "Do read has been called!\n" << std::endl;
+		   		/*Interprets bytes_read, stores new value in error code variable
+			  		socket_.async_receive(ec, bytes_read,
+			  		{
+				   		if ((boost::asio::error::eof == ec) ||
+		    			(boost::asio::error::connection_reset == ec))
+					{
+					
+						socket_.shutdown(socket_.shutdown_both);
+						socket_.close();
+						std::cout << "Cleanly closed socket." << std::endl;
+					
+					
+					}
+					else
+					{
+					
+					*/
+						 if (!ec)
+						 {
+						   std::cout << "Do read has been called!\n" << std::endl;
 
-					 std::string theData;
-           theData = data_;
+								 std::string theData;
+					   theData = data_;
 
-					 boost::smatch matches;
-		 			 if (RegexUtils::RegexFind(theData, "^[^:{]*", matches))
-		 			 {
-		 				 if (matches[0] == "Connect")
-		 				 {
-		 					 if (RegexUtils::RegexFind(theData, "([a-zA-Z0-9]*)}", matches))
-		 					 {
-								 do_write(matches[1]);
-		 						 std::cout << matches[1] << std::endl;
-		 					 }
-		 				 }
-		 				 else
-		 				 {
-		 					//  current_spreadsheet->
-		 				 }
-		 			 }
+								 boost::smatch matches;
+					 			 if (RegexUtils::RegexFind(theData, "^[^:{]*", matches))
+					 			 {
+					 				 if (matches[0] == "Connect")
+					 				 {
+					 					 if (RegexUtils::RegexFind(theData, "([a-zA-Z0-9]*)}", matches))
+					 					 {
+											 do_write(matches[1]);
+					 						 std::cout << matches[1] << std::endl;
+					 					 }
+					 				 }
+					 				 else
+					 				 {
+					 					//  current_spreadsheet->
+					 				 }
+					 			 }
 
-           std::cout << theData << std::endl;
-		     }
-				 else
-				 {
-					 	std::cout << ec << '\n';
-						// TODO: Remove from spreadsheets and disconnect socket.
-				 }
+					   std::cout << theData << std::endl;
+						 }
+						 else
+						 {
+							 	std::cout << ec << '\n';
+								// TODO: Remove from spreadsheets and disconnect socket.
+						 }	 
+					//}
+				//});
 		   });
 
 
