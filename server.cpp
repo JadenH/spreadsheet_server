@@ -63,7 +63,6 @@ class session
 		   {
 		     if (!ec)
 		     {
-		       do_write(length);
 		       std::cout << "Do read has been called!\n" << std::endl;
 
 					 std::string theData;
@@ -76,6 +75,7 @@ class session
 		 				 {
 		 					 if (RegexUtils::RegexFind(theData, "([a-zA-Z0-9]*)}", matches))
 		 					 {
+								 do_write(matches[1]);
 		 						 std::cout << matches[1] << std::endl;
 		 					 }
 		 				 }
@@ -87,15 +87,20 @@ class session
 
            std::cout << theData << std::endl;
 		     }
+				 else
+				 {
+					 	std::cout << ec << '\n';
+						// TODO: Remove from spreadsheets and disconnect socket.
+				 }
 		   });
 
 
 	  }
 
-	  void do_write(std::size_t length)
+	  void do_write(std::string message)
 	  {
 	    auto self(shared_from_this());
-	    boost::asio::async_write(socket_, boost::asio::buffer(data_, length),
+	    boost::asio::async_write(socket_, boost::asio::buffer(message + "\n", (message + "\n").length()),
 		   [this, self](boost::system::error_code ec, std::size_t /*length*/)
 		   {
 		     if (!ec)

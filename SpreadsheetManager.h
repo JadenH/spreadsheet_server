@@ -14,6 +14,7 @@
 class SpreadsheetManager {
   public:
     SpreadsheetManager();
+    Sheet GetSpreadsheet(std::string name);
 
   private:
     // Dictionary of cells indexed by cell name, stored as strings
