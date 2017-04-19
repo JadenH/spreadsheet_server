@@ -1,0 +1,13 @@
+/* Spreadsheet.h
+ *
+ * A single spreadsheet on the server.
+ */
+
+#include <map>
+
+public:
+  Spreadsheet();
+  
+private:
+  
+  map<char*, char*> _sheet;

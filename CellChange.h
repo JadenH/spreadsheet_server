@@ -1,4 +1,4 @@
-/* SpreadsheetChange.h
+/* CellChange.h
  * 
  * Represents a single change within the spreadsheet server.
  * Contains a cell name, a previous value, and a next value.
@@ -8,10 +8,10 @@
 
 #include <string>
 
-class SpreadsheetChange
+class CellChange
 {
   public:
-    SpreadsheetChange(char* cell, char* prev, char* next);
+    CellChange(char* cell, char* prev, char* next);
     char* cell_name; 
     char* prev_value,* next_value;
 };

@@ -1,4 +1,4 @@
-/* SpreadsheetChange.h
+/* CellChange.cpp
  * 
  * Represents a single change within the spreadsheet server.
  * Contains a cell name, a previous value, and a new value.
@@ -7,10 +7,11 @@
  */
 
 
-#include "SpreadsheetChange.h"
+#include "CellChange.h"
 #include <string>
 
-public SpreadsheetChange(char* cell, char* prev, char* next)
+ 
+CellChange::CellChange(char* cell, char* prev, char* next)
 {
 	cell_name = cell;
 	prev_value = prev;

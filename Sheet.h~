@@ -1,0 +1,11 @@
+/* Sheet.h
+ *
+ * Represents one spreadsheet on the server.
+ *
+ */
+
+class Sheet
+{
+  private:
+	map<char*, char*> _cells;
+}
