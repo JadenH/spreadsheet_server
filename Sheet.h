@@ -36,6 +36,7 @@ class Sheet
 		//Handle specific messages
 		void _handleEdit(std::string msg, std::string cellName, std::string cellContents);
 		void _handleUndo();
+		void _sendStartup(int id);
 
 		void _broadcastMessage(std::string msg);
 };

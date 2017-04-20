@@ -47,6 +47,7 @@ void Sheet::ReceiveMessage(int clientID, std::string message)
 void Sheet::SubscribeSession(int clientID, Session *sesh)
 {
 	_sessions.insert(std::pair<int, Session*>(clientID, sesh));
+	_sendStartup(clientID);
 }
 
 void Sheet::UnsubscribeSession(int clientID)
@@ -96,4 +97,21 @@ void Sheet::_handleUndo()
 
 	_broadcastMessage("Edit\t" + tmp.cell_name + "\t" + tmp.prev_value + "\n");
 }
+
+//Send the Startup message to a newly connected client
+void Sheet::_sendStartup(int clientID)
+{
+	std::string msg = "Startup\t" + std::to_string(clientID) + "\t";
+	
+	for(std::map<std::string, std::string>::iterator it = _cells.begin(); it != _cells.end(); ++it)
+	{
+		msg = msg + it->first + "\t" + it->second + "\t";
+	}
+
+	msg = msg + "\n";
+
+	_sessions[clientID]->DoWrite(msg);
+
+}
+
 
