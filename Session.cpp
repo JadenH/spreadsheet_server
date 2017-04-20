@@ -35,18 +35,10 @@ void Session::DoRead()
 
 	socket_.async_read_some(boost::asio::buffer(data_, max_length),
                           [this, self](boost::system::error_code ec, std::size_t BytesRead)
-  {
-  	//Handle user disconnects
-		if (ec == boost::asio::error::eof || ec == boost::asio::error::connection_reset)
-		{
-			socket_.shutdown(socket_.shutdown_both);
-			socket_.close();
-			std::cout << "Safely closed socket after client disconnect." << std::endl;
-			return;
-		}
-  
+   {
 		if (!ec)
 		{
+		  data_[BytesRead] = '\0';
 		  std::cout << "Message Received: " << data_ << std::endl;
 
 			//Get a list of each field in the message (delimited by tabs)
@@ -90,10 +82,28 @@ void Session::DoRead()
 		}
 		else
 		{
-		  std::cout << "Error: " << ec << '\n';
-		  // TODO: Remove from spreadsheets and disconnect socket.
-		}
-			
+		  //Remove from spreadsheets and disconnect socket.
+		  try
+		  {
+			  std::string error;
+			  std:: string eof1 ("End of file");
+			  std:: string eof2 ("Connection reset by peer");
+			  error = ec.message();
+			  //std::cout<<"Error Message:" << error <<'\n';
+			  if ((error.compare(eof1) == 0 || error.compare(eof2) == 0))
+				  {
+				  	socket_.shutdown(socket_.shutdown_both);
+					socket_.close();
+					std::cout << "Safely closed socket after client disconnect within try catch." << std::endl;
+					return;		  
+				  }
+		  }
+		  catch(boost::system::system_error)
+			  {
+			  	std:: cout << "Caught the system error: Connection has been closed. " << '\n';
+			  }
+
+		}//end else			
   });
   
 }
