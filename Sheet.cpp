@@ -140,6 +140,48 @@ void Sheet::_sendStartup(int clientID)
 
 void Sheet::_loadFromFile()
 {
+	_mtx.lock();
+	
+	std::ifstream file(_getFilename());
+	
+	char c; //Current character being parsed
+	std::string word = ""; //Current word being assembled
+	std::string name = ""; //A Cell's name
+	
+	bool isContents = false;
+	
+	while(file.get(c))
+	{
+	
+		//If we get to a tab, we have a cell name or contents
+		if(c == '\t')
+		{
+			if (isContents)
+			{
+				isContents = false;  //The next word will be a name
+				
+				//Add <name,contents> to the cells map
+				_cells.insert( std::pair<std::string,std::string>(name,word));
+			}
+			else
+			{
+				isContents = true;// The next word 
+				name = word; //This word is the name of a cell
+			}
+			
+			word = ""; //Reset the current word word
+			
+			continue; //Move on to the next character
+		}
+		
+		word = word+c;
+		
+	}
+	
+	file.close();
+	
+	_mtx.unlock();
+	
 }
 
 void Sheet::_saveToFile()
