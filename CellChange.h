@@ -13,9 +13,9 @@
 class CellChange
 {
   public:
-    CellChange(char* cell, char* prev, char* next);
-    char* cell_name;
-    char* prev_value,* next_value;
+    CellChange(std::string cell, std::string prev, std::string next);
+    std::string cell_name;
+    std::string prev_value, next_value;
 };
 
 #endif

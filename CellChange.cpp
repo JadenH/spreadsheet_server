@@ -11,7 +11,7 @@
 #include <string>
 
  
-CellChange::CellChange(char* cell, char* prev, char* next)
+CellChange::CellChange(std::string cell, std::string prev, std::string next)
 {
 	cell_name = cell;
 	prev_value = prev;

@@ -36,10 +36,9 @@ void Session::DoRead()
 	socket_.async_read_some(boost::asio::buffer(data_, max_length),
                           [this, self](boost::system::error_code ec, std::size_t BytesRead)
   {
-  
+  	//Handle user disconnects
 		if (ec == boost::asio::error::eof || ec == boost::asio::error::connection_reset)
 		{
-		
 			socket_.shutdown(socket_.shutdown_both);
 			socket_.close();
 			std::cout << "Safely closed socket after client disconnect." << std::endl;
@@ -63,9 +62,9 @@ void Session::DoRead()
 				_currentSpreadsheet = SpreadsheetManager::GetInstance()->GetSpreadsheet(msg[1]);
 				_currentSpreadsheet->SubscribeSession(_ID, this);
 			}
-			else
+			else if(_currentSpreadsheet != NULL)
 			{
-				_currentSpreadsheet->ReceiveMessage(data_);
+				_currentSpreadsheet->ReceiveMessage(_ID,data_);
 			}
 		  /*boost::smatch matches;
 		  if (RegexUtils::RegexFind(theData, "^[^:{]*", matches))
