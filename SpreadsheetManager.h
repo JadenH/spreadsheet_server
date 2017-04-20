@@ -13,13 +13,14 @@
 
 class SpreadsheetManager {
   public:
+    static SpreadsheetManager* GetInstance();
     SpreadsheetManager();
-    Sheet GetSpreadsheet(std::string name);
+    ~SpreadsheetManager();
+    Sheet* GetSpreadsheet(std::string name);
 
   private:
-    // Dictionary of cells indexed by cell name, stored as strings
-    // std::vector<Session> _connectedSessions;
-    std::map<std::string, Sheet>* _spreadsheets;
+    std::map<std::string, Sheet*> _spreadsheets;
+    static SpreadsheetManager *_instance;
 };
 
 #endif

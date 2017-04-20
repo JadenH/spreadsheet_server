@@ -6,6 +6,9 @@
  *
  */
 
+//Forward Declaration
+class Sheet;
+
 #include <cstdlib>
 #include <iostream>
 #include <memory>
@@ -14,23 +17,22 @@
 #include <boost/regex.hpp>
 #include "RegexUtils.h"
 #include "Sheet.h"
-#include "SpreadsheetManager.h"
-#include "Session.h"
 
 class Session : public std::enable_shared_from_this<Session>
 {
   public:
-    Session(tcp::socket socket, SpreadsheetManager* spreadsheetManager);
+    Session(boost::asio::ip::tcp::socket socket);
     void DoWrite(std::string message);
     void DoRead();
     void Start();
 
   private:
-    tcp::socket socket_;
+    boost::asio::ip::tcp::socket socket_;
     enum { max_length = 1000000000 };
     char data_[max_length];
-    SpreadsheetManager* _spreadsheetManager;
     Sheet* _currentSpreadsheet;
+		int _ID;
+		static int _currentID;
 
 };
 

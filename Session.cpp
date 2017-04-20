@@ -2,12 +2,14 @@
 #include <iostream>
 #include <memory>
 #include <utility>
+#include <vector>
 #include <boost/asio.hpp>
 #include <boost/regex.hpp>
 #include "RegexUtils.h"
-#include "Sheet.h"
-#include "SpreadsheetManager.h"
 #include "Session.h"
+#include "SpreadsheetManager.h"
+
+int Session::_currentID = 0;
 
 using boost::asio::ip::tcp;
 
@@ -15,10 +17,11 @@ using boost::asio::ip::tcp;
  * Session class - This represents a connection session between a client and the server
  */
 
-Session::Session(tcp::socket socket, SpreadsheetManager* spreadsheetManager)
+Session::Session(tcp::socket socket)
   : socket_(std::move(socket))
 {
-  _spreadsheetManager = spreadsheetManager;
+  _currentSpreadsheet = NULL;
+	_ID = _currentID++;
 }
 
 void Session::Start()
@@ -45,33 +48,50 @@ void Session::DoRead()
   
 		if (!ec)
 		{
-		  std::cout << "Do read has been called!\n" << std::endl;
+		  std::cout << "Message Received: " << data_ << std::endl;
 
-		  std::string theData;
-		  theData = data_;
-
-		  boost::smatch matches;
+			//Get a list of each field in the message (delimited by tabs)
+			std::vector<std::string> msg = RegexUtils::Split(data_, '\t');
+			
+			//If a connect message is received, we have to connect to a specific spreadsheet
+			if (msg[0] == "Connect" && msg.size() == 2 && msg[1] != "")
+			{
+				if(_currentSpreadsheet != NULL)
+				{
+					_currentSpreadsheet->UnsubscribeSession(_ID);
+				}
+				_currentSpreadsheet = SpreadsheetManager::GetInstance()->GetSpreadsheet(msg[1]);
+				_currentSpreadsheet->SubscribeSession(_ID, this);
+			}
+			else
+			{
+				_currentSpreadsheet->ReceiveMessage(data_);
+			}
+		  /*boost::smatch matches;
 		  if (RegexUtils::RegexFind(theData, "^[^:{]*", matches))
 		  {
 		    if (matches[0] == "Connect")
 		    {
 		      if (RegexUtils::RegexFind(theData, "([a-zA-Z0-9]*)}", matches))
 		      {
-		        DoWrite(matches[1]);
-		        std::cout << matches[1] << std::endl;
+		        std::cout << "Connecting to sheet: " << matches[1] << std::endl;
+            _currentSpreadsheet = matches[1];
+						SpreadsheetManager::GetInstance()->GetSpreadsheet(_currentSpreadsheet)->SubscribeSession(this);
 		      }
 		    }
 		    else
 		    {
-		      //  current_spreadsheet->
+          if(_currentSpreadsheet != "")
+  		      SpreadsheetManager::GetInstance()->GetSpreadsheet(_currentSpreadsheet)->ReceiveMessage(theData);
 		    }
-		  }
+		  }*/
 
-		  std::cout << theData << std::endl;
+		  //std::cout <<"Data: " << theData << std::endl;
+		  DoRead();
 		}
 		else
 		{
-		  std::cout << ec << '\n';
+		  std::cout << "Error: " << ec << '\n';
 		  // TODO: Remove from spreadsheets and disconnect socket.
 		}
 			

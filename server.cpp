@@ -39,12 +39,11 @@ class server
       socket_(io_service)
     {
       do_accept();
-      _spreadsheetManager = new SpreadsheetManager();
+      SpreadsheetManager::GetInstance();
     }
 
 
   private:
-    SpreadsheetManager* _spreadsheetManager;
 
     void do_accept()
     {
@@ -53,7 +52,7 @@ class server
     {
       if (!ec)
       {
-        std::make_shared<Session>(std::move(socket_), _spreadsheetManager)->Start();
+        std::make_shared<Session>(std::move(socket_))->Start();
       }
 
       do_accept();

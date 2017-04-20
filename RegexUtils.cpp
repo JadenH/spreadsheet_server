@@ -1,6 +1,7 @@
 #include "RegexUtils.h"
 #include <string>
 #include <boost/regex.hpp>
+#include <sstream>
 
 using namespace std;
 
@@ -14,6 +15,18 @@ bool RegexUtils::RegexFind(const std::string val, const std::string pattern, boo
     return true;
   }
   return false;
+}
+
+//Citation: Code from http://stackoverflow.com/questions/236129/split-a-string-in-c
+std::vector<std::string> RegexUtils::Split(std::string inp, char delimiter)
+{
+	stringstream ss(inp);
+	string item;
+	vector<string> tokens;
+	while (getline(ss, item, delimiter)) {
+		  tokens.push_back(item);
+	}
+	return tokens;
 }
 
 //
