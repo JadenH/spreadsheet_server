@@ -1,6 +1,7 @@
 #include "Sheet.h"
 #include <vector>
 #include <string>
+#include <mutex>
 
 Sheet::Sheet(std::string name)
 {
@@ -44,20 +45,27 @@ void Sheet::ReceiveMessage(int clientID, std::string message)
 	
 }
 
+//Adds a user to this sheet
 void Sheet::SubscribeSession(int clientID, Session *sesh)
 {
+	_mtx.lock();
 	_sessions.insert(std::pair<int, Session*>(clientID, sesh));
 	_sendStartup(clientID);
+	_mtx.unlock();
 }
 
+//Removes a user from this sheet
 void Sheet::UnsubscribeSession(int clientID)
 {
+	_mtx.lock();
 	_sessions.erase(clientID);
+	_mtx.lock();
 }
 
 //Sends a message to all clients subscribed to this sheet
 void Sheet::_broadcastMessage(std::string msg)
 {
+	_mtx.lock();
 	std::map<int, Session*>::iterator it = _sessions.begin();
 
 	while(it != _sessions.end())
@@ -65,6 +73,7 @@ void Sheet::_broadcastMessage(std::string msg)
 		it->second->DoWrite(msg);
 		it++;
 	}
+	_mtx.unlock();
 }
 
 //Handles receiving an "Edit" message
@@ -75,11 +84,15 @@ void Sheet::_handleEdit(std::string msg, std::string cellName, std::string cellC
 	{
 		//Add a change to the history
 		std::string prev = _cells[cellName];
+		_mtx.lock();
 		_history.push(CellChange(cellName, prev, cellContents));
+		_mtx.unlock();
 	}
 	else
 	{
+		_mtx.lock();
 		_cells.insert(std::pair<std::string, std::string>(cellName, cellContents));
+		_mtx.unlock();
 	}
 
 	_broadcastMessage(msg);
@@ -93,7 +106,9 @@ void Sheet::_handleUndo()
 		return;
 
 	CellChange tmp = _history.back();
+	_mtx.lock();
 	_history.pop();
+	_mtx.unlock();
 
 	_broadcastMessage("Edit\t" + tmp.cell_name + "\t" + tmp.prev_value + "\n");
 }
@@ -103,10 +118,12 @@ void Sheet::_sendStartup(int clientID)
 {
 	std::string msg = "Startup\t" + std::to_string(clientID) + "\t";
 	
+	_mtx.lock();
 	for(std::map<std::string, std::string>::iterator it = _cells.begin(); it != _cells.end(); ++it)
 	{
 		msg = msg + it->first + "\t" + it->second + "\t";
 	}
+	_mtx.unlock();	
 
 	msg = msg + "\n";
 

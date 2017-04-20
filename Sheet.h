@@ -17,7 +17,7 @@ class Session;
 
 #include "Session.h"
 #include "CellChange.h"
-
+#include <mutex>
 
 class Sheet
 {
@@ -32,6 +32,7 @@ class Sheet
     std::queue<CellChange> _history;
     std::map<int, Session*> _sessions;
     std::string _name;
+		std::mutex _mtx;
 
 		//Handle specific messages
 		void _handleEdit(std::string msg, std::string cellName, std::string cellContents);
