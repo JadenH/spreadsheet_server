@@ -34,6 +34,10 @@ class Sheet
     std::string _name;
 		std::mutex _mtx;
 
+		void _loadFromFile();
+		void _saveToFile();
+		std::string _getFilename() const;
+
 		//Handle specific messages
 		void _handleEdit(std::string msg, std::string cellName, std::string cellContents);
 		void _handleUndo();
