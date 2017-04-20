@@ -36,17 +36,10 @@ void Session::DoRead()
 	socket_.async_read_some(boost::asio::buffer(data_, max_length),
                           [this, self](boost::system::error_code ec, std::size_t BytesRead)
   {
-  	//Handle user disconnects
-		if (ec == boost::asio::error::eof || ec == boost::asio::error::connection_reset)
-		{
-			socket_.shutdown(socket_.shutdown_both);
-			socket_.close();
-			std::cout << "Safely closed socket after client disconnect." << std::endl;
-			return;
-		}
   
 		if (!ec)
 		{
+			data_[BytesRead] = '\0';
 		  std::cout << "Message Received: " << data_ << std::endl;
 
 			//Get a list of each field in the message (delimited by tabs)
