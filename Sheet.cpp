@@ -31,6 +31,16 @@ void Sheet::ReceiveMessage(int clientID, std::string message)
 		_handleUndo();
 		return;
 	}
+	if(msg[0] == "IsTyping")
+	{
+		_broadcastMessage(message);
+		return;
+	}
+	if(msg[0] == "DoneTyping")
+	{
+		_broadcastMessage(message);
+		return;
+	}
 	
 }
 
