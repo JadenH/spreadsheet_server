@@ -2,6 +2,8 @@
 #include <vector>
 #include <string>
 #include <mutex>
+#include <iostream>
+#include <fstream>
 
 Sheet::Sheet(std::string name)
 {
@@ -48,6 +50,10 @@ void Sheet::ReceiveMessage(int clientID, std::string message)
 //Adds a user to this sheet
 void Sheet::SubscribeSession(int clientID, Session *sesh)
 {
+	//If this client is already subscribed, return
+	if(_sessions.find(clientID) != _sessions.end())
+		return;
+
 	_mtx.lock();
 	_sessions.insert(std::pair<int, Session*>(clientID, sesh));
 	_sendStartup(clientID);
@@ -95,8 +101,8 @@ void Sheet::_handleEdit(std::string msg, std::string cellName, std::string cellC
 		_mtx.unlock();
 	}
 
+	_saveToFile();
 	_broadcastMessage(msg);
-
 }
 
 void Sheet::_handleUndo()
@@ -110,6 +116,7 @@ void Sheet::_handleUndo()
 	_history.pop();
 	_mtx.unlock();
 
+	_saveToFile();
 	_broadcastMessage("Edit\t" + tmp.cell_name + "\t" + tmp.prev_value + "\n");
 }
 
@@ -131,4 +138,29 @@ void Sheet::_sendStartup(int clientID)
 
 }
 
+void Sheet::_loadFromFile()
+{
+}
+
+void Sheet::_saveToFile()
+{
+
+	_mtx.lock();
+	std::cout << "Writing to file" << std::endl;
+	std::ofstream fs;
+	fs.open(_getFilename());	
+
+	for(std::map<std::string, std::string>::iterator it = _cells.begin(); it != _cells.end(); ++it)
+	{
+		fs << it->first + "\t" + it->second + "\t";
+	}
+	
+	fs.close();
+	_mtx.unlock();	
+}
+
+std::string Sheet::_getFilename() const
+{
+	return "Sheets/" + _name + ".txt";
+}
 
