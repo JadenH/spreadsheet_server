@@ -98,6 +98,7 @@ void Sheet::_handleEdit(std::string msg, std::string cellName, std::string cellC
 	{
 		_mtx.lock();
 		_cells.insert(std::pair<std::string, std::string>(cellName, cellContents));
+		_history.push(CellChange(cellName, "", cellContents));
 		_mtx.unlock();
 	}
 
