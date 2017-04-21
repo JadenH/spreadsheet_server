@@ -72,6 +72,8 @@ void Sheet::UnsubscribeSession(int clientID)
 {
 	_mtx.lock();
 	_sessions.erase(clientID);
+  // TODO: Keep track of the client cell and fix A1 to be that cell..
+  _broadcastMessage("DoneTyping\t" + clientID + "\tA1\t\n");
 	_mtx.unlock();
 }
 

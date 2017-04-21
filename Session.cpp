@@ -56,47 +56,19 @@ void Session::DoRead()
         _currentSpreadsheet = SpreadsheetManager::GetInstance()->GetSpreadsheet(msg[1]);
         _currentSpreadsheet->SubscribeSession(_ID, this);
       }
-      else if(_currentSpreadsheet != NULL)
+      else
+      if(_currentSpreadsheet != NULL)
       {
         _currentSpreadsheet->ReceiveMessage(_ID,data_);
       }
-      /*boost::smatch matches;
-       * if (RegexUtils::RegexFind(theData, "^[^:{]*", matches))
-       * {
-       * if (matches[0] == "Connect")
-       * {
-       *  if (RegexUtils::RegexFind(theData, "([a-zA-Z0-9]*)}", matches))
-       *  {
-       *    std::cout << "Connecting to sheet: " << matches[1] << std::endl;
-       *    _currentSpreadsheet = matches[1];
-       *    SpreadsheetManager::GetInstance()->GetSpreadsheet(_currentSpreadsheet)->SubscribeSession(this);
-       *  }
-       * }
-       * else
-       * {
-       *  if(_currentSpreadsheet != "")
-       *    SpreadsheetManager::GetInstance()->GetSpreadsheet(_currentSpreadsheet)->ReceiveMessage(theData);
-       * }
-       * }*/
 
       // std::cout <<"Data: " << theData << std::endl;
       DoRead();
     }
     else
     {
-      // Remove from spreadsheets and disconnect socket.
-      if(socket_.is_open())
-      {
-        if (_currentSpreadsheet != NULL)
-        {
-          _currentSpreadsheet->UnsubscribeSession(_ID);
-          _currentSpreadsheet = NULL;
-        }
-        socket_.shutdown(socket_.shutdown_both);
-        socket_.close();
-        std::cout << "Safely closed socket after client disconnect within try catch." << std::endl;
-      }
-    }// end else
+      _closeSocket(ec);
+    }
   });
 
 }
@@ -115,6 +87,23 @@ void Session::DoWrite(std::string message)
     }
     else
     {
+      _closeSocket(ec);
+    }
+  });
+}
+
+void Session::_closeSocket(boost::system::error_code ec)
+{
+  // Remove from spreadsheets and disconnect socket.
+  try
+  {
+    std::string error;
+    std:: string eof1 ("End of file");
+    std:: string eof2 ("Connection reset by peer");
+    error = ec.message();
+    // std::cout<<"Error Message:" << error <<'\n';
+    if ((error.compare(eof1) == 0 || error.compare(eof2) == 0))
+    {
       // Remove from spreadsheets and disconnect socket.
       if(socket_.is_open())
       {
@@ -127,6 +116,12 @@ void Session::DoWrite(std::string message)
         socket_.close();
         std::cout << "Safely closed socket after client disconnect within try catch." << std::endl;
       }
-    }// end else
-  });
+    }
+  }
+  catch(boost::system::system_error)
+  {
+    std:: cout << "Caught the system error: Connection has been closed. " << '\n';
+  }
+
+
 }

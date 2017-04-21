@@ -6,7 +6,7 @@
  *
  */
 
-//Forward Declaration
+// Forward Declaration
 class Sheet;
 
 #include <cstdlib>
@@ -31,9 +31,9 @@ class Session : public std::enable_shared_from_this<Session>
     enum { max_length = 1000000000 };
     char data_[max_length];
     Sheet* _currentSpreadsheet;
-		int _ID;
-		static int _currentID;
-
+    int _ID;
+    static int _currentID;
+    void _closeSocket(boost::system::error_code ec);
 };
 
 #endif
