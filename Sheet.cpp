@@ -18,6 +18,7 @@ Sheet::Sheet(std::string name)
 		_loadFromFile();
 }
 
+
 void Sheet::ReceiveMessage(int clientID, std::string message)
 {
 	std::vector<std::string> msg = RegexUtils::Split(message, '\t');
@@ -34,17 +35,19 @@ void Sheet::ReceiveMessage(int clientID, std::string message)
 
 		return;
 	}
-	if(msg[0] == "Undo")
+	//Undo\t\n
+	if(msg[0] == "Undo" && msg.size() == 2 && msg[1] == "\n")
 	{
 		_handleUndo();
 		return;
 	}
-	if(msg[0] == "IsTyping")
+	//IsTyping\tuserID\tCellname\t\n
+	if(msg[0] == "IsTyping" && msg.size() == 4 && msg[3] == "\n")
 	{
 		_broadcastMessage(message);
 		return;
 	}
-	if(msg[0] == "DoneTyping")
+	if(msg[0] == "DoneTyping" && msg.size() == 4 && msg[3] == "\n")
 	{
 		_broadcastMessage(message);
 		return;
