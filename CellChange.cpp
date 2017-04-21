@@ -17,3 +17,10 @@ CellChange::CellChange(std::string cell, std::string prev, std::string next)
 	prev_value = prev;
 	next_value = next;
 }
+
+CellChange::CellChange(const CellChange& other)
+{
+	cell_name = other.cell_name;
+	prev_value = other.prev_value;
+	next_value = other.next_value;
+}
