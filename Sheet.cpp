@@ -11,7 +11,7 @@ Sheet::Sheet(std::string name)
   _cells = std::map<std::string, std::string>();
   _history = std::stack<CellChange>();
   _sessions = std::map<int, Session*>();
-	
+
 	//Check if a file exists for this sheet and load it if it does
 	std::ifstream fs(_getFilename().c_str());
 	if(fs.good())
@@ -35,7 +35,7 @@ void Sheet::ReceiveMessage(int clientID, std::string message)
 		return;
 	}
 	if(msg[0] == "Undo")
-	{	
+	{
 		_handleUndo();
 		return;
 	}
@@ -58,7 +58,7 @@ void Sheet::SubscribeSession(int clientID, Session *sesh)
 
 	//If this client is already subscribed, return
 	if(_sessions.find(clientID) != _sessions.end())
-	{	
+	{
 		_mtx.unlock();
 		return;
 	}
@@ -72,7 +72,7 @@ void Sheet::UnsubscribeSession(int clientID)
 {
 	_mtx.lock();
 	_sessions.erase(clientID);
-	_mtx.lock();
+	_mtx.unlock();
 }
 
 //Sends a message to all clients subscribed to this sheet
@@ -138,14 +138,14 @@ void Sheet::_handleUndo()
 void Sheet::_sendStartup(int clientID)
 {
 	std::string msg = "Startup\t" + std::to_string(clientID) + "\t";
-	
+
 	_mtx.lock();
 	for(std::map<std::string, std::string>::iterator it = _cells.begin(); it != _cells.end(); ++it)
 	{
 		msg = msg + it->first + "\t" + it->second + "\t";
 	}
 
-	_mtx.unlock();	
+	_mtx.unlock();
 
 	msg = msg + "\n";
 
@@ -156,15 +156,15 @@ void Sheet::_sendStartup(int clientID)
 void Sheet::_loadFromFile()
 {
 	_mtx.lock();
-	
+
 	std::ifstream file(_getFilename());
-	
+
 	char c; //Current character being parsed
 	std::string word = ""; //Current word being assembled
 	std::string name = ""; //A Cell's name
-	
+
 	bool isContents = false;
-	
+
 	while(file.get(c))
 	{
 		if(c == '\n')
@@ -176,23 +176,23 @@ void Sheet::_loadFromFile()
 			if (isContents)
 			{
 				isContents = false;  //The next word will be a name
-				
+
 				//Add <name,contents> to the cells map
 				_cells.insert( std::pair<std::string,std::string>(name,word));
 			}
 			else
 			{
-				isContents = true;// The next word 
+				isContents = true;// The next word
 				name = word; //This word is the name of a cell
 			}
-			
+
 			word = ""; //Reset the current word word
-			
+
 			continue; //Move on to the next characterl
 		}
-		
+
 		word = word+c;
-		
+
 	}
 
 	word = "";
@@ -217,7 +217,7 @@ void Sheet::_loadFromFile()
 			}
 			else if(id == 1)
 			{
-				id++;// The next word 
+				id++;// The next word
 				tmp_change.prev_value = word;
 			}
 			else if(id ==2)
@@ -227,20 +227,20 @@ void Sheet::_loadFromFile()
 				std::cout <<"Loading: " << tmp_change.cell_name << " | " << tmp_change.prev_value << " | " << tmp_change.next_value << std::endl;
 				_history.push(tmp_change);
 			}
-			
+
 			word = ""; //Reset the current word word
-			
+
 			continue; //Move on to the next characterl
 		}
-		
+
 		word = word+c;
-		
+
 	}
-	
+
 	file.close();
-	
+
 	_mtx.unlock();
-	
+
 }
 
 void Sheet::Save()
@@ -254,7 +254,7 @@ void Sheet::_saveToFile()
 	_mtx.lock();
 	std::cout << "Writing to file" << std::endl;
 	std::ofstream fs;
-	fs.open(_getFilename(), std::fstream::out);	
+	fs.open(_getFilename(), std::fstream::out);
 
 	for(std::map<std::string, std::string>::iterator it = _cells.begin(); it != _cells.end(); ++it)
 	{
@@ -269,18 +269,17 @@ void Sheet::_saveToFile()
 	{
 		CellChange tmpChange = tmp.top();
 		tmp.pop();
-		
+
 		fs << tmpChange.cell_name << "\t" << tmpChange.prev_value << "\t" << tmpChange.next_value << "\t";
-	}	
+	}
 
 	fs.close();
-	
 
-	_mtx.unlock();	
+
+	_mtx.unlock();
 }
 
 std::string Sheet::_getFilename() const
 {
 	return "Sheets/" + _name + ".txt";
 }
-

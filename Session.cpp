@@ -56,8 +56,7 @@ void Session::DoRead()
         _currentSpreadsheet = SpreadsheetManager::GetInstance()->GetSpreadsheet(msg[1]);
         _currentSpreadsheet->SubscribeSession(_ID, this);
       }
-      else
-      if(_currentSpreadsheet != NULL)
+      else if(_currentSpreadsheet != NULL)
       {
         _currentSpreadsheet->ReceiveMessage(_ID,data_);
       }
@@ -86,22 +85,16 @@ void Session::DoRead()
     else
     {
       // Remove from spreadsheets and disconnect socket.
-
-      std::string error;
-      std:: string eof1 ("End of file");
-      std:: string eof2 ("Connection reset by peer");
-      error = ec.message();
-      // std::cout<<"Error Message:" << error <<'\n';
-      if ((error.compare(eof1) == 0 || error.compare(eof2) == 0))
+      if(socket_.is_open())
       {
-        if(socket.is_open())
+        if (_currentSpreadsheet != NULL)
         {
-          socket_.shutdown(socket_.shutdown_both);
-          socket_.close();
+          _currentSpreadsheet->UnsubscribeSession(_ID);
+          _currentSpreadsheet = NULL;
         }
-
+        socket_.shutdown(socket_.shutdown_both);
+        socket_.close();
         std::cout << "Safely closed socket after client disconnect within try catch." << std::endl;
-        return;
       }
     }// end else
   });
@@ -120,5 +113,20 @@ void Session::DoWrite(std::string message)
       std::cout << "Do write has been called!\n"  << std::endl;
 
     }
+    else
+    {
+      // Remove from spreadsheets and disconnect socket.
+      if(socket_.is_open())
+      {
+        if (_currentSpreadsheet != NULL)
+        {
+          _currentSpreadsheet->UnsubscribeSession(_ID);
+          _currentSpreadsheet = NULL;
+        }
+        socket_.shutdown(socket_.shutdown_both);
+        socket_.close();
+        std::cout << "Safely closed socket after client disconnect within try catch." << std::endl;
+      }
+    }// end else
   });
 }

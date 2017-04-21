@@ -48,16 +48,15 @@ class server
 
     void do_accept()
     {
-      acceptor_.async_accept(socket_,
-                             [this](boost::system::error_code ec)
-    {
-      if (!ec)
+      acceptor_.async_accept(socket_, [this](boost::system::error_code ec)
       {
-        std::make_shared<Session>(std::move(socket_))->Start();
-      }
+        if (!ec)
+        {
+          std::make_shared<Session>(std::move(socket_))->Start();
+        }
 
-      do_accept();
-    });
+        do_accept();
+      });
     }
 
     tcp::acceptor acceptor_;
@@ -78,21 +77,21 @@ int main(int argc, char* argv[])
   // Create the server with the io_service variable and the port number
   server s(io_service, ourPort);
 
-	//Run the server in a new thread
-	boost::thread bt(boost::bind(&boost::asio::io_service::run, &io_service));
+  // Run the server in a new thread
+  boost::thread bt(boost::bind(&boost::asio::io_service::run, &io_service));
 
-	std::string input = "";
+  std::string input = "";
 
-	while (input != "exit")
-	{
-		input = "";
-		std::cin >> input;
-	}
+  while (input != "exit")
+    {
+      input = "";
+      std::cin >> input;
+    }
 
-	io_service.stop();
-	
-	SpreadsheetManager::GetInstance()->Close();
-	std::cout <<"Closing the program..." << std::endl;
+  io_service.stop();
+
+  SpreadsheetManager::GetInstance()->Close();
+  std::cout <<"Closing the program..." << std::endl;
 
   return 0;
 }
