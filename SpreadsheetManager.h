@@ -14,6 +14,7 @@
 class SpreadsheetManager {
   public:
     static SpreadsheetManager* GetInstance();
+		void Close();
     SpreadsheetManager();
     ~SpreadsheetManager();
     Sheet* GetSpreadsheet(std::string name);

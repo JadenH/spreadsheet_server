@@ -34,6 +34,17 @@ Sheet* SpreadsheetManager::GetSpreadsheet(std::string name)
   return it->second;
 } 
 
+void SpreadsheetManager::Close()
+{
+	SHEETS::iterator it = _spreadsheets.begin();
+
+	while(it != _spreadsheets.end())
+	{
+		it->second->Save();
+		it++;
+	}
+}
+
 //Returns the instance if it exists, creates one otherwise
 SpreadsheetManager* SpreadsheetManager::GetInstance()
 {

@@ -12,7 +12,7 @@ class Session;
 #include <boost/asio.hpp>
 #include <boost/regex.hpp>
 #include <map>
-#include <queue>
+#include <stack>
 #include <vector>
 
 #include "Session.h"
@@ -26,10 +26,11 @@ class Sheet
     void ReceiveMessage(int id, std::string message);
 		void SubscribeSession(int id, Session *sesh);
 		void UnsubscribeSession(int id);
+		void Save();
 
   private:
     std::map<std::string, std::string> _cells;
-    std::queue<CellChange> _history;
+    std::stack<CellChange> _history;
     std::map<int, Session*> _sessions;
     std::string _name;
 		std::mutex _mtx;
@@ -39,7 +40,7 @@ class Sheet
 		std::string _getFilename() const;
 
 		//Handle specific messages
-		void _handleEdit(std::string msg, std::string cellName, std::string cellContents);
+		void _handleEdit(std::string cellName, std::string cellContents);
 		void _handleUndo();
 		void _sendStartup(int id);
 

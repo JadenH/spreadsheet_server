@@ -47,7 +47,7 @@ void Session::DoRead()
 			std::vector<std::string> msg = RegexUtils::Split(data_, '\t');
 			
 			//If a connect message is received, we have to connect to a specific spreadsheet
-			if (msg[0] == "Connect" && msg.size() == 2 && msg[1] != "")
+			if (msg[0] == "Connect" && msg.size() == 3 && msg[1] != "" && msg[2] == "\n")
 			{
 				if(_currentSpreadsheet != NULL)
 				{

@@ -24,6 +24,7 @@
 #include <memory>
 #include <utility>
 #include <boost/asio.hpp>
+#include <boost/thread.hpp>
 
 #include "SpreadsheetManager.h"
 #include "Session.h"
@@ -77,8 +78,21 @@ int main(int argc, char* argv[])
   // Create the server with the io_service variable and the port number
   server s(io_service, ourPort);
 
-  // Start up the listening service
-  io_service.run();
+	//Run the server in a new thread
+	boost::thread bt(boost::bind(&boost::asio::io_service::run, &io_service));
+
+	std::string input = "";
+
+	while (input != "exit")
+	{
+		input = "";
+		std::cin >> input;
+	}
+
+	io_service.stop();
+	
+	SpreadsheetManager::GetInstance()->Close();
+	std::cout <<"Closing the program..." << std::endl;
 
   return 0;
 }
