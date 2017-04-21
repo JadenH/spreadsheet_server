@@ -14,6 +14,7 @@ class CellChange
 {
   public:
     CellChange(std::string cell, std::string prev, std::string next);
+		CellChange(const CellChange& other);
     std::string cell_name;
     std::string prev_value, next_value;
 };
