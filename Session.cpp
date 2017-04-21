@@ -56,21 +56,19 @@ void Session::DoRead()
         _currentSpreadsheet = SpreadsheetManager::GetInstance()->GetSpreadsheet(msg[1]);
         _currentSpreadsheet->SubscribeSession(_ID, this);
       }
-      else
-      if(_currentSpreadsheet != NULL)
+      else if(_currentSpreadsheet != NULL)
       {
         _currentSpreadsheet->ReceiveMessage(_ID,data_);
       }
 
-      // std::cout <<"Data: " << theData << std::endl;
       DoRead();
+      // std::cout <<"Data: " << theData << std::endl;
     }
     else
     {
       _closeSocket(ec);
     }
   });
-
 }
 
 void Session::DoWrite(std::string message)
@@ -81,9 +79,7 @@ void Session::DoWrite(std::string message)
   {
     if (!ec)
     {
-      DoRead();
       std::cout << "Do write has been called!\n"  << std::endl;
-
     }
     else
     {
