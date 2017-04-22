@@ -11,6 +11,7 @@ Sheet::Sheet(std::string name)
   _cells = std::map<std::string, std::string>();
   _history = std::stack<CellChange>();
   _sessions = std::map<int, Session*>();
+  _currentCell = std::map<int, std::string>();
 
 	//Check if a file exists for this sheet and load it if it does
 	std::ifstream fs(_getFilename().c_str());
@@ -41,6 +42,7 @@ void Sheet::ReceiveMessage(int clientID, std::string message)
 	}
 	if(msg[0] == "IsTyping")
 	{
+		_handleIsTyping(msg[1],msg[2]);
 		_broadcastMessage(message);
 		return;
 	}
@@ -71,9 +73,13 @@ void Sheet::SubscribeSession(int clientID, Session *sesh)
 void Sheet::UnsubscribeSession(int clientID)
 {
 	_mtx.lock();
-	_sessions.erase(clientID);
-  // TODO: Keep track of the client cell and fix A1 to be that cell..
-  // _broadcastMessage("DoneTyping\t" + std::string(clientID) + "\tA1\t\n");
+
+  std::string clientCell = _currentCell[clientID];
+  _broadcastMessage("DoneTyping\t" + std::to_string(clientID) + "\t"+ clientCell +"\t\n");
+  _currentCell.erase(clientID);
+  
+  _sessions.erase(clientID);
+  
 	_mtx.unlock();
 }
 
@@ -113,6 +119,24 @@ void Sheet::_handleEdit(std::string cellName, std::string cellContents)
 	_broadcastMessage("Change\t" + cellName + "\t" + cellContents + "\t\n");
 
 	_saveToFile();
+}
+
+void Sheet::_handleIsTyping(std::string clientID, std::string cellName)
+{
+	_mtx.lock();
+	
+	int ID = std::stoi(clientID);
+	
+	std::pair<std::map<int,std::string>::iterator,bool> mapPair;
+
+	mapPair = _currentCell.insert( std::pair<int,std::string>(ID,cellName));
+
+	if( mapPair.second == false)
+	{
+		mapPair.first->second = cellName;
+	}
+	
+	_mtx.unlock();
 }
 
 void Sheet::_handleUndo()
