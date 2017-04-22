@@ -167,6 +167,7 @@ void Sheet::_handleUndo()
 }
 
 //Send the Startup message to a newly connected client
+//Also sends current selected cells
 void Sheet::_sendStartup(int clientID)
 {
 	std::string msg = "Startup\t" + std::to_string(clientID) + "\t";
@@ -176,12 +177,26 @@ void Sheet::_sendStartup(int clientID)
 	{
 		msg = msg + it->first + "\t" + it->second + "\t";
 	}
-
 	_mtx.unlock();
 
 	msg = msg + "\n";
 
 	_sessions[clientID]->DoWrite(msg);
+	
+	
+	_mtx.lock();
+	
+	//Send information about who is typing where
+	for(std::map<int, std::string>::iterator it = _currentCell.begin(); it != _currentCell.end(); ++it)
+	{
+		int otherID = it->first;
+		std::string cellName = it->second;
+		
+		_sessions[clientID]->DoWrite("IsTyping\t"+std::to_string(otherID)+'\t'+cellName+"\t\n");
+	}
+	
+	_mtx.unlock();
+	
 
 }
 
