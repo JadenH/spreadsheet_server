@@ -74,13 +74,18 @@ void Sheet::UnsubscribeSession(int clientID)
 {
 	_mtx.lock();
 
-  std::string clientCell = _currentCell[clientID];
-  _broadcastMessage("DoneTyping\t" + std::to_string(clientID) + "\t"+ clientCell +"\t\n");
-  _currentCell.erase(clientID);
-  
+	std::cout << "Unsubscribed Session." << std::endl;
+
   _sessions.erase(clientID);
   
+  std::string clientCell = _currentCell[clientID]; 
+  std::string endMessage = "DoneTyping\t" + std::to_string(clientID) + "\t"+ clientCell +"\t\n";
+  _currentCell.erase(clientID);
+
 	_mtx.unlock();
+	
+	
+	_broadcastMessage(endMessage);
 }
 
 //Sends a message to all clients subscribed to this sheet
@@ -94,6 +99,7 @@ void Sheet::_broadcastMessage(std::string msg)
 		it->second->DoWrite(msg);
 		it++;
 	}
+	
 	_mtx.unlock();
 }
 
