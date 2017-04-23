@@ -11,6 +11,7 @@ Sheet::Sheet(std::string name)
   _cells = std::map<std::string, std::string>();
   _history = std::stack<CellChange>();
   _sessions = std::map<int, Session*>();
+  _currentCell = std::map<int, std::string>();
 
 	//Check if a file exists for this sheet and load it if it does
 	std::ifstream fs(_getFilename().c_str());
@@ -44,6 +45,7 @@ void Sheet::ReceiveMessage(int clientID, std::string message)
 	//IsTyping\tuserID\tCellname\t\n
 	if(msg[0] == "IsTyping" && msg.size() == 4 && msg[3] == "\n")
 	{
+		_handleIsTyping(msg[1],msg[2]);
 		_broadcastMessage(message);
 		return;
 	}
@@ -74,10 +76,19 @@ void Sheet::SubscribeSession(int clientID, Session *sesh)
 void Sheet::UnsubscribeSession(int clientID)
 {
 	_mtx.lock();
-	_sessions.erase(clientID);
-  // TODO: Keep track of the client cell and fix A1 to be that cell..
-  // _broadcastMessage("DoneTyping\t" + std::string(clientID) + "\tA1\t\n");
+
+	std::cout << "Unsubscribed Session." << std::endl;
+
+  _sessions.erase(clientID);
+  
+  std::string clientCell = _currentCell[clientID]; 
+  std::string endMessage = "DoneTyping\t" + std::to_string(clientID) + "\t"+ clientCell +"\t\n";
+  _currentCell.erase(clientID);
+
 	_mtx.unlock();
+	
+	
+	_broadcastMessage(endMessage);
 }
 
 //Sends a message to all clients subscribed to this sheet
@@ -91,6 +102,7 @@ void Sheet::_broadcastMessage(std::string msg)
 		it->second->DoWrite(msg);
 		it++;
 	}
+	
 	_mtx.unlock();
 }
 
@@ -118,6 +130,24 @@ void Sheet::_handleEdit(std::string cellName, std::string cellContents)
 	_saveToFile();
 }
 
+void Sheet::_handleIsTyping(std::string clientID, std::string cellName)
+{
+	_mtx.lock();
+	
+	int ID = std::stoi(clientID);
+	
+	std::pair<std::map<int,std::string>::iterator,bool> mapPair;
+
+	mapPair = _currentCell.insert( std::pair<int,std::string>(ID,cellName));
+
+	if( mapPair.second == false)
+	{
+		mapPair.first->second = cellName;
+	}
+	
+	_mtx.unlock();
+}
+
 void Sheet::_handleUndo()
 {
 	//Exit early if there is no history
@@ -140,6 +170,7 @@ void Sheet::_handleUndo()
 }
 
 //Send the Startup message to a newly connected client
+//Also sends current selected cells
 void Sheet::_sendStartup(int clientID)
 {
 	std::string msg = "Startup\t" + std::to_string(clientID) + "\t";
@@ -149,12 +180,26 @@ void Sheet::_sendStartup(int clientID)
 	{
 		msg = msg + it->first + "\t" + it->second + "\t";
 	}
-
 	_mtx.unlock();
 
 	msg = msg + "\n";
 
 	_sessions[clientID]->DoWrite(msg);
+	
+	
+	_mtx.lock();
+	
+	//Send information about who is typing where
+	for(std::map<int, std::string>::iterator it = _currentCell.begin(); it != _currentCell.end(); ++it)
+	{
+		int otherID = it->first;
+		std::string cellName = it->second;
+		
+		_sessions[clientID]->DoWrite("IsTyping\t"+std::to_string(otherID)+'\t'+cellName+"\t\n");
+	}
+	
+	_mtx.unlock();
+	
 
 }
 

@@ -32,6 +32,7 @@ class Sheet
     std::map<std::string, std::string> _cells;
     std::stack<CellChange> _history;
     std::map<int, Session*> _sessions;
+    std::map<int, std::string> _currentCell;
     std::string _name;
 		std::mutex _mtx;
 
@@ -41,8 +42,10 @@ class Sheet
 
 		//Handle specific messages
 		void _handleEdit(std::string cellName, std::string cellContents);
+		void _handleIsTyping(std::string clientID, std::string cellName);
 		void _handleUndo();
 		void _sendStartup(int id);
+
 
 		void _broadcastMessage(std::string msg);
 };

@@ -105,8 +105,8 @@ void Session::_closeSocket(boost::system::error_code ec)
       {
         if (_currentSpreadsheet != NULL)
         {
-          _currentSpreadsheet->UnsubscribeSession(_ID);
-          _currentSpreadsheet = NULL;
+          //_currentSpreadsheet->UnsubscribeSession(_ID);
+          //_currentSpreadsheet = NULL;
         }
         socket_.shutdown(socket_.shutdown_both);
         socket_.close();
@@ -116,6 +116,12 @@ void Session::_closeSocket(boost::system::error_code ec)
   }
   catch(boost::system::system_error)
   {
+  
+  	if (_currentSpreadsheet != NULL)
+    {
+      _currentSpreadsheet->UnsubscribeSession(_ID);
+      _currentSpreadsheet = NULL;
+    }
     std:: cout << "Caught the system error: Connection has been closed. " << '\n';
   }
 
