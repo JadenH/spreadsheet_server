@@ -35,6 +35,8 @@ class Sheet
     std::map<int, std::string> _currentCell;
     std::string _name;
 		std::mutex _mtx;
+		//This mutex is used to lock a file while it's being saved to.
+		std::mutex _fileMutex;
 
 		void _loadFromFile();
 		void _saveToFile();

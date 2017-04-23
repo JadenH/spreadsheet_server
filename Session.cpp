@@ -29,6 +29,7 @@ void Session::Start()
   DoRead();
 }
 
+//Reads a message from the client.
 void Session::DoRead()
 {
   auto self(shared_from_this());
@@ -60,29 +61,26 @@ void Session::DoRead()
       {
         _currentSpreadsheet->ReceiveMessage(_ID,data_);
       }
-
+			
+			//Continue the read loop
       DoRead();
-      // std::cout <<"Data: " << theData << std::endl;
     }
     else
     {
+			//If an error is caught we close the socket
       _closeSocket(ec);
     }
   });
 }
 
+//Asynchronously sends a message to the client in this session
 void Session::DoWrite(std::string message)
 {
   auto self(shared_from_this());
   boost::asio::async_write(socket_, boost::asio::buffer(message + "\n", (message + "\n").length()),
                            [this, self](boost::system::error_code ec, std::size_t /*length*/)
   {
-    if (!ec)
-    {
-      std::cout << "Do write has been called!\n"  << std::endl;
-    }
-    else
-    {
+    if (ec){
       _closeSocket(ec);
     }
   });
@@ -105,8 +103,8 @@ void Session::_closeSocket(boost::system::error_code ec)
       {
         if (_currentSpreadsheet != NULL)
         {
-          //_currentSpreadsheet->UnsubscribeSession(_ID);
-          //_currentSpreadsheet = NULL;
+          _currentSpreadsheet->UnsubscribeSession(_ID);
+          _currentSpreadsheet = NULL;
         }
         socket_.shutdown(socket_.shutdown_both);
         socket_.close();
@@ -116,12 +114,12 @@ void Session::_closeSocket(boost::system::error_code ec)
   }
   catch(boost::system::system_error)
   {
-  
   	if (_currentSpreadsheet != NULL)
     {
       _currentSpreadsheet->UnsubscribeSession(_ID);
       _currentSpreadsheet = NULL;
     }
+  
     std:: cout << "Caught the system error: Connection has been closed. " << '\n';
   }
 

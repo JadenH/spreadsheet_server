@@ -1,3 +1,7 @@
+/*	RegexUtils.cpp
+*		Contains useful functions for dealing with string parsing.
+*/
+
 #include "RegexUtils.h"
 #include <string>
 #include <boost/regex.hpp>
@@ -28,17 +32,3 @@ std::vector<std::string> RegexUtils::Split(std::string inp, char delimiter)
 	}
 	return tokens;
 }
-
-//
-// int main()
-// {
-//     std::string input = "Change:{cellName, cellContents}\n";
-//     std::string pattern = "^[^:{]*";
-//     boost::smatch something;
-//     if (RegexFind(input, pattern, something))
-//     {
-//       cout << something[0] << endl;
-//     }
-//
-//     return 0;
-// }

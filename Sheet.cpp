@@ -19,7 +19,7 @@ Sheet::Sheet(std::string name)
 		_loadFromFile();
 }
 
-
+//Handles a message from any session connected to this session.
 void Sheet::ReceiveMessage(int clientID, std::string message)
 {
 	std::vector<std::string> msg = RegexUtils::Split(message, '\t');
@@ -28,9 +28,10 @@ void Sheet::ReceiveMessage(int clientID, std::string message)
 		return;
 
 	//Handle each different message type
+
+	//Edit\tcellName\tcellContent\t\n
 	if(msg[0] == "Edit")
 	{
-		//Edit\tcellName\tcellContent\t\n
 		if(msg.size() == 4 && msg[3] == "\n")
 			_handleEdit(msg[1], msg[2]);
 
@@ -49,6 +50,7 @@ void Sheet::ReceiveMessage(int clientID, std::string message)
 		_broadcastMessage(message);
 		return;
 	}
+	//IsTyping\tuserID\tCellname\t\n
 	if(msg[0] == "DoneTyping" && msg.size() == 4 && msg[3] == "\n")
 	{
 		_broadcastMessage(message);
@@ -130,6 +132,7 @@ void Sheet::_handleEdit(std::string cellName, std::string cellContents)
 	_saveToFile();
 }
 
+//Handles IsTyping messages from the client
 void Sheet::_handleIsTyping(std::string clientID, std::string cellName)
 {
 	_mtx.lock();
@@ -148,6 +151,7 @@ void Sheet::_handleIsTyping(std::string clientID, std::string cellName)
 	_mtx.unlock();
 }
 
+//Handles an Undo message from a client
 void Sheet::_handleUndo()
 {
 	//Exit early if there is no history
@@ -186,7 +190,6 @@ void Sheet::_sendStartup(int clientID)
 
 	_sessions[clientID]->DoWrite(msg);
 	
-	
 	_mtx.lock();
 	
 	//Send information about who is typing where
@@ -199,10 +202,9 @@ void Sheet::_sendStartup(int clientID)
 	}
 	
 	_mtx.unlock();
-	
-
 }
 
+//Parse cell and history data into this object
 void Sheet::_loadFromFile()
 {
 	_mtx.lock();
@@ -300,35 +302,47 @@ void Sheet::Save()
 
 void Sheet::_saveToFile()
 {
-
+	//Lock the datastructures and copy them for saving.
 	_mtx.lock();
-	std::cout << "Writing to file" << std::endl;
+	std::map<std::string, std::string> cellCopy = _cells;
+	std::stack<CellChange> histCopy = _history;
+	_mtx.unlock();
+
+	//Lock the filewriter mutex
+	_fileMutex.lock();
+	std::cout << "Beginning file write in " << _getFilename() << std::endl;
+	//Open the file into a stream
 	std::ofstream fs;
 	fs.open(_getFilename(), std::fstream::out);
 
-	for(std::map<std::string, std::string>::iterator it = _cells.begin(); it != _cells.end(); ++it)
+	//Write each cellchange into the file in the same format as a startup message.
+	for(std::map<std::string, std::string>::iterator it = cellCopy.begin(); it != cellCopy.end(); ++it)
 	{
 		fs << it->first + "\t" + it->second + "\t";
 	}
 
+	//Write a newline to separate history from cells
 	fs << "\n";
 
-	std::stack<CellChange> tmp = _history;
-
-	while(tmp.size() > 0)
+	//Write each change in order in the format "Celllname\tPrev_value\tNext_Value
+	while(histCopy.size() > 0)
 	{
-		CellChange tmpChange = tmp.top();
-		tmp.pop();
+		CellChange tmpChange = histCopy.top();
+		histCopy.pop();
 
 		fs << tmpChange.cell_name << "\t" << tmpChange.prev_value << "\t" << tmpChange.next_value << "\t";
 	}
 
+	//Close the filestream
 	fs.close();
+	
+	std::cout << "Spreadsheet " << _getFilename() << " written to file" << std::endl;
 
-
-	_mtx.unlock();
+	_fileMutex.unlock();
 }
 
+//Returns the filepath to this spreadsheet
+// NOTE: This filepath requires that there is a "Sheets" directory in the server's root.
 std::string Sheet::_getFilename() const
 {
 	return "Sheets/" + _name + ".txt";
