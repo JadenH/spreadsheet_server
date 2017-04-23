@@ -48,6 +48,7 @@ class Sheet
 		void _handleUndo();
 		void _sendStartup(int id);
 
+		bool _isValidCellname(std::string inp);
 
 		void _broadcastMessage(std::string msg);
 };

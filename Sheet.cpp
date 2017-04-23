@@ -32,7 +32,7 @@ void Sheet::ReceiveMessage(int clientID, std::string message)
 	//Edit\tcellName\tcellContent\t\n
 	if(msg[0] == "Edit")
 	{
-		if(msg.size() == 4 && msg[3] == "\n")
+		if(msg.size() == 4 && _isValidCellname(msg[1]) && msg[3] == "\n")
 			_handleEdit(msg[1], msg[2]);
 
 		return;
@@ -44,14 +44,14 @@ void Sheet::ReceiveMessage(int clientID, std::string message)
 		return;
 	}
 	//IsTyping\tuserID\tCellname\t\n
-	if(msg[0] == "IsTyping" && msg.size() == 4 && msg[3] == "\n")
+	if(msg[0] == "IsTyping" && msg.size() == 4 && _isValidCellname(msg[2]) && msg[3] == "\n")
 	{
 		_handleIsTyping(msg[1],msg[2]);
 		_broadcastMessage(message);
 		return;
 	}
 	//IsTyping\tuserID\tCellname\t\n
-	if(msg[0] == "DoneTyping" && msg.size() == 4 && msg[3] == "\n")
+	if(msg[0] == "DoneTyping" && msg.size() == 4 && _isValidCellname(msg[2]) && msg[3] == "\n")
 	{
 		_broadcastMessage(message);
 		return;
@@ -298,6 +298,18 @@ void Sheet::_loadFromFile()
 void Sheet::Save()
 {
 	_saveToFile();
+}
+
+//Returns true if "name" matches a cellname
+bool Sheet::_isValidCellname(std::string name)
+{
+	std::string validNamePattern = "^[A-Z]+[1-9][0-9]*$";
+	
+	boost::smatch dummy;
+	std::cout << name << " IsValid? " << RegexUtils::RegexFind(name, validNamePattern, dummy) << std::endl;
+	
+	//Just create a dummy smatch so we can call the RegexFind function
+	return RegexUtils::RegexFind( name, validNamePattern,dummy);
 }
 
 void Sheet::_saveToFile()
