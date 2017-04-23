@@ -23,7 +23,7 @@ class Sheet
 {
   public:
     Sheet(std::string name);
-    void ReceiveMessage(int id, std::string message);
+    bool ReceiveMessage(int id, std::string message);
 		void SubscribeSession(int id, Session *sesh);
 		void UnsubscribeSession(int id);
 		void Save();

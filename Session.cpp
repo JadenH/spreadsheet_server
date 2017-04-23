@@ -33,7 +33,6 @@ void Session::Start()
 void Session::DoRead()
 {
   auto self(shared_from_this());
-
   socket_.async_read_some(boost::asio::buffer(data_, max_length),
                           [this, self](boost::system::error_code ec, std::size_t BytesRead)
   {
@@ -61,8 +60,16 @@ void Session::DoRead()
       }
       else if(_currentSpreadsheet != NULL)
       {
-        _currentSpreadsheet->ReceiveMessage(_ID,data_);
+				//If the message is corrupt of malformed, disconnect that user
+        if(!_currentSpreadsheet->ReceiveMessage(_ID,data_))
+				{
+					_closeSocket(boost::system::errc::make_error_code(boost::system::errc::permission_denied));
+				}
       }
+			else
+			{
+				_closeSocket(boost::system::errc::make_error_code(boost::system::errc::permission_denied));
+			}
 			
 			//Continue the read loop
       DoRead();
@@ -73,12 +80,15 @@ void Session::DoRead()
       _closeSocket(ec);
     }
   });
+
+	
 }
 
 //Asynchronously sends a message to the client in this session
 void Session::DoWrite(std::string message)
 {
   auto self(shared_from_this());
+
   boost::asio::async_write(socket_, boost::asio::buffer(message + "\n", (message + "\n").length()),
                            [this, self](boost::system::error_code ec, std::size_t /*length*/)
   {
@@ -98,7 +108,7 @@ void Session::_closeSocket(boost::system::error_code ec)
     std:: string eof2 ("Connection reset by peer");
     error = ec.message();
     // std::cout<<"Error Message:" << error <<'\n';
-    if ((error.compare(eof1) == 0 || error.compare(eof2) == 0))
+    if (ec)
     {
       // Remove from spreadsheets and disconnect socket.
       if(socket_.is_open())

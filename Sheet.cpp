@@ -20,12 +20,12 @@ Sheet::Sheet(std::string name)
 }
 
 //Handles a message from any session connected to this session.
-void Sheet::ReceiveMessage(int clientID, std::string message)
+bool Sheet::ReceiveMessage(int clientID, std::string message)
 {
 	std::vector<std::string> msg = RegexUtils::Split(message, '\t');
 
 	if(msg.size() == 0)
-		return;
+		return false;
 
 	//Handle each different message type
 
@@ -34,28 +34,32 @@ void Sheet::ReceiveMessage(int clientID, std::string message)
 	{
 		if(msg.size() == 4 && _isValidCellname(msg[1]) && msg[3] == "\n")
 			_handleEdit(msg[1], msg[2]);
-
-		return;
+		else
+			return false;
+		return true;
 	}
 	//Undo\t\n
 	if(msg[0] == "Undo" && msg.size() == 2 && msg[1] == "\n")
 	{
 		_handleUndo();
-		return;
+		return true;
 	}
 	//IsTyping\tuserID\tCellname\t\n
 	if(msg[0] == "IsTyping" && msg.size() == 4 && _isValidCellname(msg[2]) && msg[3] == "\n")
 	{
 		_handleIsTyping(msg[1],msg[2]);
 		_broadcastMessage(message);
-		return;
+		return true;
 	}
 	//IsTyping\tuserID\tCellname\t\n
 	if(msg[0] == "DoneTyping" && msg.size() == 4 && _isValidCellname(msg[2]) && msg[3] == "\n")
 	{
 		_broadcastMessage(message);
-		return;
+		return true;
 	}
+
+	std::cout << "Bad Message!!!!!!" << std::endl;
+	return false;
 }
 
 //Adds a user to this sheet
@@ -71,6 +75,7 @@ void Sheet::SubscribeSession(int clientID, Session *sesh)
 	}
 	_sessions.insert(std::pair<int, Session*>(clientID, sesh));
 	_mtx.unlock();
+
 	_sendStartup(clientID);
 }
 
@@ -84,13 +89,13 @@ void Sheet::UnsubscribeSession(int clientID)
   _sessions.erase(clientID);
   
   std::string clientCell = _currentCell[clientID]; 
-  std::string endMessage = "DoneTyping\t" + std::to_string(clientID) + "\t"+ clientCell +"\t\n";
+  //std::string endMessage = "DoneTyping\t" + std::to_string(clientID) + "\t"+ clientCell +"\t\n";
   _currentCell.erase(clientID);
 
 	_mtx.unlock();
 	
 	
-	_broadcastMessage(endMessage);
+	//_broadcastMessage(endMessage);
 }
 
 //Sends a message to all clients subscribed to this sheet
@@ -135,6 +140,8 @@ void Sheet::_handleEdit(std::string cellName, std::string cellContents)
 //Handles IsTyping messages from the client
 void Sheet::_handleIsTyping(std::string clientID, std::string cellName)
 {
+	return;
+
 	_mtx.lock();
 	
 	int ID = std::stoi(clientID);
@@ -190,7 +197,7 @@ void Sheet::_sendStartup(int clientID)
 
 	_sessions[clientID]->DoWrite(msg);
 	
-	_mtx.lock();
+	/*_mtx.lock();
 	
 	//Send information about who is typing where
 	for(std::map<int, std::string>::iterator it = _currentCell.begin(); it != _currentCell.end(); ++it)
@@ -201,7 +208,7 @@ void Sheet::_sendStartup(int clientID)
 		_sessions[clientID]->DoWrite("IsTyping\t"+std::to_string(otherID)+'\t'+cellName+"\t\n");
 	}
 	
-	_mtx.unlock();
+	_mtx.unlock();*/
 }
 
 //Parse cell and history data into this object
@@ -306,7 +313,6 @@ bool Sheet::_isValidCellname(std::string name)
 	std::string validNamePattern = "^[A-Z]+[1-9][0-9]*$";
 	
 	boost::smatch dummy;
-	std::cout << name << " IsValid? " << RegexUtils::RegexFind(name, validNamePattern, dummy) << std::endl;
 	
 	//Just create a dummy smatch so we can call the RegexFind function
 	return RegexUtils::RegexFind( name, validNamePattern,dummy);
