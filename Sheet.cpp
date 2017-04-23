@@ -45,20 +45,20 @@ bool Sheet::ReceiveMessage(int clientID, std::string message)
 		return true;
 	}
 	//IsTyping\tuserID\tCellname\t\n
-	if(msg[0] == "IsTyping" && msg.size() == 4 && _isValidCellname(msg[2]) && msg[3] == "\n")
+	if(msg[0] == "IsTyping" && msg.size() == 4 && RegexUtils::IsInt(msg[1]) && _isValidCellname(msg[2]) && msg[3] == "\n")
 	{
 		_handleIsTyping(msg[1],msg[2]);
 		_broadcastMessage(message);
 		return true;
 	}
 	//IsTyping\tuserID\tCellname\t\n
-	if(msg[0] == "DoneTyping" && msg.size() == 4 && _isValidCellname(msg[2]) && msg[3] == "\n")
+	if(msg[0] == "DoneTyping" && msg.size() == 4 && RegexUtils::IsInt(msg[1]) && _isValidCellname(msg[2]) && msg[3] == "\n")
 	{
 		_broadcastMessage(message);
 		return true;
 	}
 
-	std::cout << "Bad Message!!!!!!" << std::endl;
+	std::cout << "Corrupt message, disconnecting client." << std::endl;
 	return false;
 }
 

@@ -33,6 +33,13 @@ bool RegexUtils::IsValidFilename(const std::string name)
 	return boost::regex_search(name, dummy, expr);
 }
 
+//Returns true if string can be parsed as an integer.
+bool RegexUtils::IsInt(std::string val)
+{
+	int dummyval;
+	return sscanf(val.c_str(), "%d", &dummyval);
+}
+
 //Citation: Code from http://stackoverflow.com/questions/236129/split-a-string-in-c
 std::vector<std::string> RegexUtils::Split(std::string inp, char delimiter)
 {
