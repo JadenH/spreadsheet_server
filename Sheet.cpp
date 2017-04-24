@@ -32,33 +32,33 @@ bool Sheet::ReceiveMessage(int clientID, std::string message)
 	//Edit\tcellName\tcellContent\t\n
 	if(msg[0] == "Edit")
 	{
-		if(msg.size() == 4 && _isValidCellname(msg[1]) && msg[3] == "\n")
+		if(msg.size() == 4 && _isValidCellname(msg[1]))
 			_handleEdit(msg[1], msg[2]);
 		else
 			return false;
 		return true;
 	}
 	//Undo\t\n
-	if(msg[0] == "Undo" && msg.size() == 2 && msg[1] == "\n")
+	if(msg[0] == "Undo" && msg.size() == 1)
 	{
 		_handleUndo();
 		return true;
 	}
 	//IsTyping\tuserID\tCellname\t\n
-	if(msg[0] == "IsTyping" && msg.size() == 4 && RegexUtils::IsInt(msg[1]) && _isValidCellname(msg[2]) && msg[3] == "\n")
+	if(msg[0] == "IsTyping" && msg.size() == 3 && RegexUtils::IsInt(msg[1]) && msg[2] != "" && _isValidCellname(msg[2]))
 	{
 		_handleIsTyping(msg[1],msg[2]);
 		_broadcastMessage(message);
 		return true;
 	}
 	//IsTyping\tuserID\tCellname\t\n
-	if(msg[0] == "DoneTyping" && msg.size() == 4 && RegexUtils::IsInt(msg[1]) && _isValidCellname(msg[2]) && msg[3] == "\n")
+	if(msg[0] == "DoneTyping" && msg.size() == 3 && RegexUtils::IsInt(msg[1]) && msg[2] != "" && _isValidCellname(msg[2]))
 	{
 		_broadcastMessage(message);
 		return true;
 	}
 
-	std::cout << "Corrupt message, disconnecting client." << std::endl;
+	std::cout << "Corrupt message, disconnecting client. Invalid Message: " << message << std::endl;
 	return false;
 }
 
@@ -87,14 +87,14 @@ void Sheet::UnsubscribeSession(int clientID)
 	std::cout << "Unsubscribed Session." << std::endl;
 
   _sessions.erase(clientID);
-  
-  std::string clientCell = _currentCell[clientID]; 
+
+  std::string clientCell = _currentCell[clientID];
   std::string endMessage = "DoneTyping\t" + std::to_string(clientID) + "\t"+ clientCell +"\t\n";
   _currentCell.erase(clientID);
 
 	_mtx.unlock();
-	
-	
+
+
 	_broadcastMessage(endMessage);
 }
 
@@ -109,7 +109,7 @@ void Sheet::_broadcastMessage(std::string msg)
 		it->second->DoWrite(msg);
 		it++;
 	}
-	
+
 	_mtx.unlock();
 }
 
@@ -143,9 +143,9 @@ void Sheet::_handleIsTyping(std::string clientID, std::string cellName)
 	return;
 
 	_mtx.lock();
-	
+
 	int ID = std::stoi(clientID);
-	
+
 	std::pair<std::map<int,std::string>::iterator,bool> mapPair;
 
 	mapPair = _currentCell.insert( std::pair<int,std::string>(ID,cellName));
@@ -154,7 +154,7 @@ void Sheet::_handleIsTyping(std::string clientID, std::string cellName)
 	{
 		mapPair.first->second = cellName;
 	}
-	
+
 	_mtx.unlock();
 }
 
@@ -196,18 +196,18 @@ void Sheet::_sendStartup(int clientID)
 	msg = msg + "\n";
 
 	_sessions[clientID]->DoWrite(msg);
-	
+
 	_mtx.lock();
-	
+
 	//Send information about who is typing where
 	for(std::map<int, std::string>::iterator it = _currentCell.begin(); it != _currentCell.end(); ++it)
 	{
 		int otherID = it->first;
 		std::string cellName = it->second;
-		
+
 		_sessions[clientID]->DoWrite("IsTyping\t"+std::to_string(otherID)+'\t'+cellName+"\t\n");
 	}
-	
+
 	_mtx.unlock();
 }
 
@@ -311,9 +311,9 @@ void Sheet::Save()
 bool Sheet::_isValidCellname(std::string name)
 {
 	std::string validNamePattern = "^[A-Z]+[1-9][0-9]*$";
-	
+
 	boost::smatch dummy;
-	
+
 	//Just create a dummy smatch so we can call the RegexFind function
 	return RegexUtils::RegexFind( name, validNamePattern,dummy);
 }
@@ -353,7 +353,7 @@ void Sheet::_saveToFile()
 
 	//Close the filestream
 	fs.close();
-	
+
 	std::cout << "Spreadsheet " << _getFilename() << " written to file" << std::endl;
 
 	_fileMutex.unlock();
