@@ -3,6 +3,8 @@
 #include <map>
 #include "Sheet.h"
 #include <iostream>
+#include <dirent.h>
+#include <stdio.h>
 
 typedef std::map<std::string, Sheet*> SHEETS;
 
@@ -15,6 +17,23 @@ SpreadsheetManager::SpreadsheetManager()
   {
     std::cout << "Initializing SpreadsheetManager" << std::endl;
     _spreadsheets = std::map<std::string, Sheet*>();
+		
+		DIR *dir;
+		struct dirent *dp;
+		char* filename;
+		dir = opendir("Sheets");
+
+		while ((dp=readdir(dir)) != NULL)
+		{
+			std::string filename = dp->d_name;
+			std::cout << "debug: " << dp->d_name << std::endl;
+			filename = filename.substr(0, filename.size()-4);
+			if(RegexUtils::IsValidFilename(filename))
+			{
+				GetSpreadsheet(filename);
+			}
+		}
+
   }
 }
 
