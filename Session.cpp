@@ -38,6 +38,11 @@ void Session::DoRead()
   {
     if (!ec)
     {
+			if(BytesRead == 0 || (BytesRead == 1 && data_[0] == '\n'))
+			{
+				DoRead();
+				return;
+			}
       data_[BytesRead] = '\0';
 
       // Split incoming messages on newline character.
