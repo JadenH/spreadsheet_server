@@ -18,6 +18,8 @@ SpreadsheetManager::SpreadsheetManager()
     std::cout << "Initializing SpreadsheetManager" << std::endl;
     _spreadsheets = std::map<std::string, Sheet*>();
 		
+		mkdir("Sheets", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+
 		DIR *dir;
 		struct dirent *dp;
 		char* filename;

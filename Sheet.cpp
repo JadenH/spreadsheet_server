@@ -89,13 +89,13 @@ void Sheet::UnsubscribeSession(int clientID)
   _sessions.erase(clientID);
   
   std::string clientCell = _currentCell[clientID]; 
-  //std::string endMessage = "DoneTyping\t" + std::to_string(clientID) + "\t"+ clientCell +"\t\n";
+  std::string endMessage = "DoneTyping\t" + std::to_string(clientID) + "\t"+ clientCell +"\t\n";
   _currentCell.erase(clientID);
 
 	_mtx.unlock();
 	
 	
-	//_broadcastMessage(endMessage);
+	_broadcastMessage(endMessage);
 }
 
 //Sends a message to all clients subscribed to this sheet
@@ -197,7 +197,7 @@ void Sheet::_sendStartup(int clientID)
 
 	_sessions[clientID]->DoWrite(msg);
 	
-	/*_mtx.lock();
+	_mtx.lock();
 	
 	//Send information about who is typing where
 	for(std::map<int, std::string>::iterator it = _currentCell.begin(); it != _currentCell.end(); ++it)
@@ -208,7 +208,7 @@ void Sheet::_sendStartup(int clientID)
 		_sessions[clientID]->DoWrite("IsTyping\t"+std::to_string(otherID)+'\t'+cellName+"\t\n");
 	}
 	
-	_mtx.unlock();*/
+	_mtx.unlock();
 }
 
 //Parse cell and history data into this object
