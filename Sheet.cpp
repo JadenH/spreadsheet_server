@@ -282,7 +282,7 @@ void Sheet::_loadFromFile()
       {
         id = 0;
         tmp_change.next_value = word;
-        std::cout <<"Loading: " << tmp_change.cell_name << " | " << tmp_change.prev_value << " | " << tmp_change.next_value << std::endl;
+        //std::cout <<"Loading: " << tmp_change.cell_name << " | " << tmp_change.prev_value << " | " << tmp_change.next_value << std::endl;
         _history.push(tmp_change);
       }
 
@@ -327,7 +327,7 @@ void Sheet::_saveToFile()
 
   // Lock the filewriter mutex
   _fileMutex.lock();
-  std::cout << "Beginning file write in " << _getFilename() << std::endl;
+  std::cout << "Writing " << _getFilename() << " to file..." << std::endl;
   // Open the file into a stream
   std::ofstream fs;
   fs.open(_getFilename(), std::fstream::out);
@@ -353,7 +353,7 @@ void Sheet::_saveToFile()
   // Close the filestream
   fs.close();
 
-  std::cout << "Spreadsheet " << _getFilename() << " written to file" << std::endl;
+  //std::cout << "Spreadsheet " << _getFilename() << " written to file" << std::endl;
 
   _fileMutex.unlock();
 }

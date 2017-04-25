@@ -34,6 +34,7 @@ class Session : public std::enable_shared_from_this<Session>
     int _ID;
     static int _currentID;
     void _closeSocket(boost::system::error_code ec);
+		std::string buffer_;
 };
 
 #endif

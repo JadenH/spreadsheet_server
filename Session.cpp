@@ -38,21 +38,33 @@ void Session::DoRead()
   {
     if (!ec)
     {
+			//Ignore empty messages
 			if(BytesRead == 0 || (BytesRead == 1 && data_[0] == '\n'))
 			{
 				DoRead();
 				return;
 			}
+
       data_[BytesRead] = '\0';
 
       // Split incoming messages on newline character.
-      std::vector<std::string> messages = RegexUtils::Split(data_, '\n');
+      std::vector<std::string> messages = RegexUtils::Split(buffer_ + data_, '\n');
+	
+			buffer_ = "";	 
 
+			//If we've received an incomplete message
+			if(data_[BytesRead-1] != '\n')
+			{
+				//Fill the buffer with the partial message
+				buffer_ = messages[messages.size()-1].c_str();	
+				messages.pop_back();
+			}
+	
       // Iterate through received messages.
       std::vector<std::string>::iterator itr = messages.begin();
       while(itr != messages.end())
       {
-        std::cout << "Message Received: " << *itr << std::endl;
+        //std::cout << "Message Received: " << *itr << std::endl;
 
         // Get a list of each field in the message (delimited by tabs)
         std::vector<std::string> msg = RegexUtils::Split(*itr, '\t');
@@ -101,7 +113,7 @@ void Session::DoWrite(std::string message)
 {
   auto self(shared_from_this());
 
-  std::cout << "Message Sent: " << (message + "\n") << std::endl;
+  //std::cout << "Message Sent: " << (message + "\n") << std::endl;
 
   boost::asio::async_write(socket_, boost::asio::buffer(message + "\n", (message + "\n").length()),
                            [this, self](boost::system::error_code ec, std::size_t /*length*/)
@@ -135,7 +147,7 @@ void Session::_closeSocket(boost::system::error_code ec)
         }
         socket_.shutdown(socket_.shutdown_both);
         socket_.close();
-        std::cout << "Safely closed socket after client disconnect within try catch." << std::endl;
+        //std::cout << "Safely closed socket after client disconnect within try catch." << std::endl;
       }
     }
   }
@@ -147,6 +159,6 @@ void Session::_closeSocket(boost::system::error_code ec)
       _currentSpreadsheet = NULL;
     }
 
-    std:: cout << "Caught the system error: Connection has been closed. " << '\n';
+    //std:: cout << "Caught the system error: Connection has been closed. " << '\n';
   }
 }

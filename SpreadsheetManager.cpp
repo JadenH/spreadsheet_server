@@ -15,7 +15,7 @@ SpreadsheetManager::SpreadsheetManager()
 {
   if(_instance == 0)
   {
-    std::cout << "Initializing SpreadsheetManager" << std::endl;
+    //std::cout << "Initializing SpreadsheetManager" << std::endl;
     _spreadsheets = std::map<std::string, Sheet*>();
 		
 		mkdir("Sheets", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
@@ -28,7 +28,7 @@ SpreadsheetManager::SpreadsheetManager()
 		while ((dp=readdir(dir)) != NULL)
 		{
 			std::string filename = dp->d_name;
-			std::cout << "debug: " << dp->d_name << std::endl;
+			//std::cout << "debug: " << dp->d_name << std::endl;
 			filename = filename.substr(0, filename.size()-4);
 			if(RegexUtils::IsValidFilename(filename))
 			{
@@ -41,14 +41,14 @@ SpreadsheetManager::SpreadsheetManager()
 
 Sheet* SpreadsheetManager::GetSpreadsheet(std::string name)
 {
-  std::cout << "GetSpreadsheet: " << name << std::endl;
+  //std::cout << "GetSpreadsheet: " << name << std::endl;
   SHEETS::iterator it = _spreadsheets.find(name);
   //If there is no spreadsheet with the given name, create it
   if(it == _spreadsheets.end())
   {
     _spreadsheets.insert(std::pair<std::string, Sheet*>(name, new Sheet(name)));
     //_spreadsheets[name] = new Sheet(name);
-    std::cout <<"Returning: " << name << std::endl;
+    //std::cout <<"Returning: " << name << std::endl;
     return _spreadsheets[name];
   }
   
