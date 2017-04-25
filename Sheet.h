@@ -3,10 +3,10 @@
 /* Sheet.h
  *
  * Represents one spreadsheet on the server.
- *
+ * Author: Adam Waggoner, Jaden Holladay, Logan Ropelato, Gray Marchese
  */
 
-//Forward declare Session
+// Forward declare Session
 class Session;
 
 #include <boost/asio.hpp>
@@ -24,9 +24,9 @@ class Sheet
   public:
     Sheet(std::string name);
     bool ReceiveMessage(int id, std::string message);
-		void SubscribeSession(int id, Session *sesh);
-		void UnsubscribeSession(int id);
-		void Save();
+    void SubscribeSession(int id, Session *sesh);
+    void UnsubscribeSession(int id);
+    void Save();
 
   private:
     std::map<std::string, std::string> _cells;
@@ -34,23 +34,23 @@ class Sheet
     std::map<int, Session*> _sessions;
     std::map<int, std::string> _currentCell;
     std::string _name;
-		std::mutex _mtx;
-		//This mutex is used to lock a file while it's being saved to.
-		std::mutex _fileMutex;
+    std::mutex _mtx;
+    // This mutex is used to lock a file while it's being saved to.
+    std::mutex _fileMutex;
 
-		void _loadFromFile();
-		void _saveToFile();
-		std::string _getFilename() const;
+    void _loadFromFile();
+    void _saveToFile();
+    std::string _getFilename() const;
 
-		//Handle specific messages
-		void _handleEdit(std::string cellName, std::string cellContents);
-		void _handleIsTyping(std::string clientID, std::string cellName);
-		void _handleUndo();
-		void _sendStartup(int id);
+    // Handle specific messages
+    void _handleEdit(std::string cellName, std::string cellContents);
+    void _handleIsTyping(std::string clientID, std::string cellName);
+    void _handleUndo();
+    void _sendStartup(int id);
 
-		bool _isValidCellname(std::string inp);
+    bool _isValidCellname(std::string inp);
 
-		void _broadcastMessage(std::string msg);
+    void _broadcastMessage(std::string msg);
 };
 
 #endif

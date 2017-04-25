@@ -1,6 +1,7 @@
-/*	RegexUtils.cpp
-*		Contains useful functions for dealing with string parsing.
-*/
+/* RegexUtils.cpp
+ * Contains useful functions for dealing with string parsing.
+ * Author: Adam Waggoner, Jaden Holladay, Logan Ropelato, Gray Marchese
+ */
 
 #include "RegexUtils.h"
 #include <string>
@@ -21,33 +22,34 @@ bool RegexUtils::RegexFind(const std::string val, const std::string pattern, boo
   return false;
 }
 
-//Validates that a file name is legal
+// Validates that a file name is legal
 bool RegexUtils::IsValidFilename(const std::string name)
 {
-	if(name.size() > 255)
-		return false;
-	
-	boost::regex expr("^[\\w\\- ]+$");
-	boost::smatch dummy;
-	
-	return boost::regex_search(name, dummy, expr);
+  if(name.size() > 255)
+    return false;
+
+  boost::regex expr("^[\\w\\- ]+$");
+  boost::smatch dummy;
+
+  return boost::regex_search(name, dummy, expr);
 }
 
-//Returns true if string can be parsed as an integer.
+// Returns true if string can be parsed as an integer.
 bool RegexUtils::IsInt(std::string val)
 {
-	int dummyval;
-	return sscanf(val.c_str(), "%d", &dummyval);
+  int dummyval;
+  return sscanf(val.c_str(), "%d", &dummyval);
 }
 
-//Citation: Code from http://stackoverflow.com/questions/236129/split-a-string-in-c
+// Citation: Code from http://stackoverflow.com/questions/236129/split-a-string-in-c
 std::vector<std::string> RegexUtils::Split(std::string inp, char delimiter)
 {
-	stringstream ss(inp);
-	string item;
-	vector<string> tokens;
-	while (getline(ss, item, delimiter)) {
-		  tokens.push_back(item);
-	}
-	return tokens;
+  stringstream ss(inp);
+  string item;
+  vector<string> tokens;
+  while (getline(ss, item, delimiter))
+  {
+    tokens.push_back(item);
+  }
+  return tokens;
 }

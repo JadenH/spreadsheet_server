@@ -3,6 +3,7 @@
 /* SpreadsheetManager.h
  *
  * A manager for all spreadsheets on the server.
+ * Author: Adam Waggoner, Jaden Holladay, Logan Ropelato, Gray Marchese
  */
 
 #include <map>
@@ -14,7 +15,7 @@
 class SpreadsheetManager {
   public:
     static SpreadsheetManager* GetInstance();
-		void Close();
+    void Close();
     SpreadsheetManager();
     ~SpreadsheetManager();
     Sheet* GetSpreadsheet(std::string name);

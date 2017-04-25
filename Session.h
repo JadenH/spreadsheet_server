@@ -3,7 +3,7 @@
 /* Session.h
  *
  * A session on the server.
- *
+ * Author: Adam Waggoner, Jaden Holladay, Logan Ropelato, Gray Marchese
  */
 
 // Forward Declaration
