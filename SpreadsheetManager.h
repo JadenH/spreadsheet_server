@@ -2,7 +2,8 @@
 #define SPREADSHEETMANAGER_H
 /* SpreadsheetManager.h
  *
- * A manager for all spreadsheets on the server.
+ * A singleton which manages all of the server's spreadsheets.
+ *
  * Author: Adam Waggoner, Jaden Holladay, Logan Ropelato, Gray Marchese
  */
 
